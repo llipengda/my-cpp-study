@@ -23,13 +23,13 @@ int most_beautiful(int a, int b, int l)
 int main()
 {
     int n, m, l;
-    cin >> n >> m >> l;
+    scanf("%d %d %d", &n, &m, &l);
     for (int i = 0; i < n; i++)
         for (int j = 0; j < m; j++)
-            cin >> matrix[i][j];
+            scanf("%d", &matrix[i][j]);
     for (int i = 0; i < n - l + 1; i++){
         for (int j = 0; j < m - l + 1; j++)
-            cout << most_beautiful(i, j, l) << ' ';
-        cout << '\n';
+            printf("%d ", most_beautiful(i, j, l));
+        putchar('\n');
     }
 }
