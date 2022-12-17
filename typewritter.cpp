@@ -7,12 +7,15 @@ int main()
     int t = 0;
     while (~(ch = getchar())) {
         t++;
+        if (ch == '\n'){
+            cout << str << endl;
+            t = 0;
+        }
         if (ch == '[')
             t = 0;
         else if (ch == ']')
             t = str.length();
         else
-            str.insert(str.begin() + t, ch);
+            str.insert(str.begin() + t - 1, ch);
     }
-    cout << str;
 }
