@@ -2,21 +2,22 @@
 using namespace std;
 int main()
 {
-    string str = "";
+    list<char> str;
     char ch;
-    int t = 0;
+    auto t = str.begin();
     while (~(ch = getchar())) {
-        t++;
         if (ch == '\n'){
-            cout << str << endl;
-            t = 0;
-            str = "";
+            for(auto i : str)
+                cout << i;
+            cout << '\n';
+            str.clear();
+            t = str.begin();
         }
         else if (ch == '[')
-            t = 0;
+            t = str.begin();
         else if (ch == ']')
-            t = str.length();
+            t = str.end();
         else
-            str.insert(str.begin() + t - 1, ch);
+            str.insert(t, ch);
     }
 }
