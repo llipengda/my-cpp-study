@@ -10,8 +10,9 @@ int main()
         if (ch == '\n'){
             cout << str << endl;
             t = 0;
+            str = "";
         }
-        if (ch == '[')
+        else if (ch == '[')
             t = 0;
         else if (ch == ']')
             t = str.length();
