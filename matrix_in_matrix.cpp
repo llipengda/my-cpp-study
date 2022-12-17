@@ -16,8 +16,7 @@ int most_beautiful(int a, int b, int l)
 {
     int result = matrix[a][b];
     for (int i = a; i < a + l; i++)
-        for (int j = b; j < b + l; j++)
-            result = result > matrix[i][j] ? result : matrix[i][j];
+        result = max(result, *max_element(matrix[i] + b, matrix[i] + b + l));
     return result;
 }
 int main()
