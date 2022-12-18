@@ -17,7 +17,7 @@ struct task {
     int num, next, period;
     bool operator<(const task& other) const
     {
-        return (next > other.next) || (next == other.next && num > other.num);
+        return ((next > other.next) || ((next == other.next) && (num > other.num)));
     }
 };
 int main()
@@ -27,14 +27,14 @@ int main()
     string str;
     priority_queue<task> q;
     int num, period;
-    while (n--)
-    {
+    while (n--) {
         cin >> str >> num >> period;
-        task temp = { num, period, period};
-        q.push(temp);
+        if (!str.compare("Register")) {
+            task temp = { num, period, period };
+            q.push(temp);
+        }
     }
-    while (k--)
-    {
+    while (k--) {
         cout << q.top().num << endl;
         task temp = q.top();
         q.pop();
