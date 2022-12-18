@@ -14,12 +14,13 @@ Register Q_num Period
 #include <bits/stdc++.h>
 using namespace std;
 struct task {
-    int num, next, period;
+    int num, next;
     bool operator<(const task& other) const
     {
         return ((next > other.next) || ((next == other.next) && (num > other.num)));
     }
 };
+map<int, int> timed;
 int main()
 {
     int n, k;
@@ -29,16 +30,15 @@ int main()
     int num, period;
     while (n--) {
         cin >> str >> num >> period;
-        if (!str.compare("Register")) {
-            task temp = { num, period, period };
-            q.push(temp);
-        }
+        timed[num] = period;
+        task temp = { num, period };
+        q.push(temp);
     }
     while (k--) {
         cout << q.top().num << endl;
         task temp = q.top();
         q.pop();
-        temp.next += temp.period;
+        temp.next += timed[temp.num];
         q.push(temp);
     }
 }
