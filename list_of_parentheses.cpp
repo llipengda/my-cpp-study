@@ -48,27 +48,33 @@ int main()
             it++;
         else if (ch == 'D') {
             if (*it == ')') {
-                parentheses.erase(it);
+                auto temp = it;
                 it--;
+                parentheses.erase(temp);
                 int leftp = 1;
                 while (leftp) {
                     if (*it == '(')
                         leftp--;
                     else if (*it == ')')
                         leftp++;
-                    parentheses.erase(it);
+                    temp = it;
                     it--;
+                    parentheses.erase(temp);
                 }
                 it++;
             } else if (*it == '(') {
-                parentheses.erase(it);
+                auto temp = it;
+                it++;
+                parentheses.erase(temp);
                 int rightp = 1;
                 while (rightp) {
                     if (*it == '(')
                         rightp++;
                     else if (*it == ')')
                         rightp--;
-                    parentheses.erase(it);
+                    temp = it;
+                    it++;
+                    parentheses.erase(temp);
                 }
             }
             if (*it == '#')
