@@ -35,8 +35,13 @@ int main()
         } else if (cmd == 2) {
             int m;
             cin >> m;
-            person.remove(m);
-            person.push_front(m);
+            for (auto it = person.begin(); it != person.end(); it++) {
+                if (*it == m) {
+                    person.erase(it);
+                    person.push_front(m);
+                    break;
+                }
+            }
         }
     }
 }
