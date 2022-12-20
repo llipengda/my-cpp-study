@@ -16,32 +16,79 @@ HINT 输出描述
 // BUG: test with TLE
 #include <bits/stdc++.h>
 using namespace std;
+struct medical_queue {
+    int no;
+    medical_queue* link;
+};
+medical_queue* createDown(int p)
+{
+    medical_queue *head, *end, *node;
+    head = new medical_queue;
+    end = head;
+    for (int i = 1; i <= p; i++) {
+        node = new medical_queue;
+        node->no = i;
+        end->link = node;
+        end = node;
+    }
+    end->link = nullptr;
+    return head;
+}
+void deletePosition(medical_queue* head, medical_queue* position)
+{
+    medical_queue* _head = head;
+    while(_head->link != position)
+        _head = _head->link;
+    _head->link = position->link;
+    delete position;
+}
+void deleteNo(medical_queue* head, int no)
+{
+    medical_queue* _head = head;
+    medical_queue* temp = _head->link;
+    while(temp->no != no){
+        _head = _head->link;
+        temp = temp->link;
+    }
+    _head->link = temp->link;
+    delete temp;
+}
+void addEnd(medical_queue* head, int no)
+{
+    medical_queue* _head = head;
+    while(_head->link != nullptr)
+        _head = _head->link;
+    medical_queue* temp = new medical_queue;
+    _head->link = temp;
+    temp->no = no;
+    temp->link = nullptr;
+}
+void addFront(medical_queue* head, int no)
+{
+    medical_queue* temp = new medical_queue;
+    temp->no = no;
+    temp->link = head->link;
+    head->link = temp;
+}
 int main()
 {
-    list<int> person;
     int n, p;
     cin >> n >> p;
-    for (int i = 1; i <= p; i++)
-        person.push_back(i);
+    medical_queue* head = createDown(p);
     while (n--) {
         int cmd;
         cin >> cmd;
         if (cmd == 1) {
-            int temp = person.front();
-            person.pop_front();
-            person.push_back(temp);
+            int temp = head->link->no;
+            deletePosition(head, head->link);
+            addEnd(head, temp);
         } else if (cmd == 3) {
-            cout << person.front() << endl;
+            cout << head->link->no << endl;
         } else if (cmd == 2) {
             int m;
             cin >> m;
-            for (auto it = person.begin(); it != person.end(); it++) {
-                if (*it == m) {
-                    person.erase(it);
-                    person.push_front(m);
-                    break;
-                }
-            }
+            deleteNo(head, m);
+            addFront(head, m);
         }
     }
 }
