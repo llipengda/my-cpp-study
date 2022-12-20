@@ -8,6 +8,7 @@ Y 是一个非常注重外表的人，当他检阅一个军训方阵时，他只
 输出描述
 输出一个 (n−l+1)×(m−l+1) 的矩阵 B。矩阵 B 中的元素 bij表示以 (i,j) 为最左上角元素的 l×l 的子矩阵中的美丽值最大值。
 */
+// BUG: test with TLE
 #include <bits/stdc++.h>
 using namespace std;
 int matrix[2050][2050];
