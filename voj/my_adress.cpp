@@ -8,7 +8,7 @@ int main()
     for (int x = 0;; x++) {
         for (int y = 0; y < x; y++) {
             if (x * (x + 1) / 2 - 2 * y == n) {
-                cout << y <<" "<< x;
+                cout << y << " " << x;
                 flag = 1;
                 break;
             }

@@ -40,7 +40,7 @@ int main()
             } else {
                 head = head->link;
                 next = next->link;
-            }   
+            }
         }
         cout << head->number;
     }

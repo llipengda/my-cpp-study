@@ -17,14 +17,13 @@ int main()
     char ch;
     auto t = str.begin();
     while (~(ch = getchar())) {
-        if (ch == '\n'){
-            for(auto i : str)
+        if (ch == '\n') {
+            for (auto i : str)
                 cout << i;
             cout << '\n';
             str.clear();
             t = str.begin();
-        }
-        else if (ch == '[')
+        } else if (ch == '[')
             t = str.begin();
         else if (ch == ']')
             t = str.end();

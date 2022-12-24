@@ -77,7 +77,7 @@ int days(struct date day) // 返回本年中自一月一日起的天数
     int i, lp;
 
     lp = (day.year % 4 == 0 && day.year % 100 != 0 || day.year % 400 == 0); /*判定year为闰年还是平年，lp=0为平年，非0为闰年*/
-    for (i = 1; i < day.month; i++) //计算本年中自1月1日起的天数*/
+    for (i = 1; i < day.month; i++) // 计算本年中自1月1日起的天数*/
         day.day += day_tab[lp][i];
     return day.day;
 }

@@ -1,4 +1,4 @@
-//汉诺塔问题
+// 汉诺塔问题
 #include <bits/stdc++.h>
 using namespace std;
 long long times(int n)
@@ -12,7 +12,7 @@ long long HP(int n)
 {
     if (n == 1)
         return n;
-    else 
+    else
         return 2 * HP(n - 1) + n;
 }
 int main()

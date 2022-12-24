@@ -37,7 +37,7 @@ medical_queue* createDown(int p)
 void deletePosition(medical_queue* head, medical_queue* position)
 {
     medical_queue* _head = head;
-    while(_head->link != position)
+    while (_head->link != position)
         _head = _head->link;
     _head->link = position->link;
     delete position;
@@ -46,7 +46,7 @@ void deleteNo(medical_queue* head, int no)
 {
     medical_queue* _head = head;
     medical_queue* temp = _head->link;
-    while(temp->no != no){
+    while (temp->no != no) {
         _head = _head->link;
         temp = temp->link;
     }
@@ -56,7 +56,7 @@ void deleteNo(medical_queue* head, int no)
 void addEnd(medical_queue* head, int no)
 {
     medical_queue* _head = head;
-    while(_head->link != nullptr)
+    while (_head->link != nullptr)
         _head = _head->link;
     medical_queue* temp = new medical_queue;
     _head->link = temp;

@@ -27,7 +27,7 @@ double P(double m, int n)
 
 /*********  End  *********/
 
-//忽略阅读
+// 忽略阅读
 int main()
 {
     int n;
@@ -38,4 +38,4 @@ int main()
 
     return 0;
 }
-//忽略阅读结束
+// 忽略阅读结束
