@@ -1,7 +1,7 @@
 /*
 链接：https://ac.nowcoder.com/acm/contest/46813/D
 来源：牛客网
-HINT 题目描述 
+HINT 题目描述
 小沙和小雅在一起打游戏，因为赌气，他们想要比比看谁打通的关卡数更多，
 在游戏过程中，他们两个人都可以获得一些奇怪的道具来帮助他们通关，
 假设小沙和小雅都从第一关开始，他们必须一关一关通，只有通过了第 x 关，第 x+1 关才会解锁。
@@ -32,12 +32,18 @@ int s_pass[100005], y_pass[100005], n;
 void merge(pii levels[], int pass[])
 {
     int l = 0, r = 0;
+    set<pii> st; //~ 使用set对数据进行自动排序，保证先取到较小的值
     for (int i = 0; i <= n; i++) {
-        if ((levels[i].first <= r || levels[i].first == r + 1) && levels[i].second >= r)
-            r = levels[i].second;
-        for (int j = i; j >= 0; j--)
-            if ((levels[j].first <= r || levels[j].first == r + 1) && levels[j].second >= r)
-                r = levels[j].second;
+        st.insert(levels[i]);
+        auto beg = (*st.begin());
+        while (beg.first <= r + 1) { //~ 保证只对可合并的数据进行处理
+            r = max(r, beg.second);
+            st.erase(st.begin()); //~ 删掉用过的数据，减小运算量
+            if (st.empty())
+                break;
+            else
+                beg = (*st.begin());
+        }
         pass[i] = r;
     }
 }
