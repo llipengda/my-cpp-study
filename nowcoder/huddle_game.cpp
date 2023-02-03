@@ -21,20 +21,22 @@ using namespace std;
 typedef long long ll;
 typedef double db;
 typedef pair<int, int> pii;
-int n, m, b[100005], x[100005], dp[505];
+int n, m, b[100005], x[100005];
 int main()
 {
     cin >> n >> m;
     for (int i = 1; i <= m; i++)
         cin >> b[i] >> x[i];
-    memset(dp, 0x3f3f3f3f, sizeof(dp));
+    vector<ll> dp(n + 1, 1E18);
     for (int i = 1; i <= n; i++) {
         bool flag = true;
         for (int j = 1; j <= m; j++) {
             if (x[j] < i) {
                 int k = i - i % x[j];
-                dp[i] = min(dp[i], dp[k] + b[j]);
-                flag = false;
+                if (k < i) {
+                    dp[i] = min(dp[i], dp[k] + b[j]);
+                    flag = false;
+                }
             }
         }
         if (flag)
