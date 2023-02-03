@@ -1,7 +1,7 @@
 /*
 链接：https://ac.nowcoder.com/acm/contest/46814/G
 来源：牛客网
-HINT 题目描述 
+HINT 题目描述
 阿宁有一个长度为n的整数数组a，阿宁想要在其中选出恰好k对整数，使得每对整数相乘并求和尽可能大。
 阿宁想知道最终得到的值是多少？
 HINT 输入描述:
@@ -9,7 +9,7 @@ HINT 输入描述:
 第二行 n个整数 a_i。
 2≤n≤2×10^5
 1≤k≤⌊n/2⌋
-−100≤a_i≤100 
+−100≤a_i≤100
 HINT 输出描述:
 输出一个整数，表示答案。
 */
@@ -20,47 +20,34 @@ using namespace std;
 typedef long long ll;
 typedef double db;
 typedef pair<int, int> pii;
-ll mul(vector<ll> num)
-{
-    if (num.size() >= 2)
-        return num[0] * num[1];
-    else
-        return (ll)-10E17;
-}
 int main()
 {
-    int n, k, t;
+    int n, k;
     cin >> n >> k;
-    vector<ll> po, ne, zero;
-    while (n--) {
-        cin >> t;
-        if (t > 0)
-            po.push_back(t);
-        else if (t == 0)
-            zero.push_back(t);
-        else
-            ne.push_back(t);
+    vector<int> num(n + 1);
+    for (int i = 1; i <= n; i++)
+        cin >> num[i];
+    sort(num.begin() + 1, num.end());
+    vector<ll> mul(2 * k + 1, 0);
+    int j = 1;
+    for (int i = 1; i < n; i += 2) {
+        if (num[i] <= 0 && num[i + 1] <= 0)
+            mul[j++] = num[i] * num[i + 1];
+        if (j == k)
+            break;
     }
-    sort(po.begin(), po.end(), greater<ll>());
-    sort(ne.begin(), ne.end());
+    int tmp = (j - 1) * 2 + 1;
+    for (int i = n; i > 1; i -= 2) {
+        if (num[i] && num[i - 1] > 0)
+            mul[j++] = num[i] * num[i - 1];
+        if (j == 2 * k)
+            break;
+    }
     ll ans = 0;
-    while (k--) {
-        ll a = mul(po), b = mul(ne);
-        if (a >= b && a > 0) {
-            ans += a;
-            po.erase(po.begin());
-            po.erase(po.begin());
-        } else if (a < b) {
-            ans += b;
-            ne.erase(ne.begin());
-            ne.erase(ne.begin());
-        } else {
-            if (!zero.empty())
-                zero.erase(zero.begin());
-            else
-                ans += *(po.begin()) * (*(ne.begin()));
-        }
-        cerr << a << ' ' << b << ' ' << ans << endl;
-    }
-    cout << ans;
+    if (j < k + 1)
+        ans += num[tmp] * num[tmp + 1];
+    sort(mul.begin() + 1, mul.end(), greater<ll>());
+    for (int i = 1; i <= k; i++)
+        ans += mul[i];
+    cout << ans << endl;
 }
