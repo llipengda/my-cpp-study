@@ -19,21 +19,7 @@ typedef long long ll;
 typedef double db;
 typedef pair<int, int> pii;
 ll n, q, k, x, ans;
-ll item[100005];
-int find(ll arr[], int n, int x)
-{
-    int left = 0, right = n - 1;
-    int result = n - 1;
-    while (left <= right) {
-        int mid = left + (right - left) / 2;
-        if (arr[mid] > x) {
-            result = mid;
-            right = mid - 1;
-        } else
-            left = mid + 1;
-    }
-    return result;
-}
+ll item[100005], sum[100005];
 int main()
 {
     IO;
@@ -41,17 +27,16 @@ int main()
     for (ll i = 0; i < n; i++)
         cin >> item[i];
     sort(item, item + n);
+    sum[0] = item[0];
+    for (ll i = 1; i < n; i++)
+        sum[i] = sum[i - 1] + item[i];
+    //~ 使用前缀和进行预处理来提高效率！！
     while (q--) {
-        ans = 0;
         cin >> k >> x;
-        for (ll i = find(item, n, x); i >= 0; i--) {
-            if (item[i] <= x && k > 0) {
-                ans += item[i];
-                k--;
-            }
-            if (k == 0)
-                break;
-        }
-        cout << ans << endl;
+        ll t = upper_bound(item, item + n, x) - item - 1;
+        //~ 使用 upper_bound() 函数二分查找数组中大于 x的第一个元素，该函数返回一个指向该元素的指针，- item后为该元素的下标，-1后为小于等于 x的最后一个元素
+        //~ 相似地，可以使用 lower_bound() 函数二分查找数组中大于等于 x的第一个元素
+        cout << sum[t] - ((t - k) >= 0 ? sum[t - k] : 0) << endl; 
+        //~ [a,b]的和使用前缀和的求法: sum[b] - sum[a - 1]，注意此时 b为 t - k + 1.
     }
 }
