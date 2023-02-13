@@ -3,3 +3,4 @@ bin/
 .vscode/
 in.txt
 out.txt
+.clang-*
