@@ -7,6 +7,14 @@ using namespace std;
 typedef long long ll;
 typedef double db;
 typedef pair<int, int> pii;
-int main() {
+void solve() {
     
+}
+int main() {
+    int T;
+    cin >> T;
+    for (int i = 0; i < T; i++) {
+        cout << "case #" << i << ":\n";
+        solve();
+    }
 }
