@@ -1,5 +1,3 @@
-#include <cstdint>
-#include <iostream>
 #include <stdexcept>
 
 const int maxstack = 100;
@@ -9,7 +7,7 @@ public:
     MyStack();
     void pop();
     void push(const T& item);
-    int64_t size() const;
+    size_t size() const;
     void clear();
     bool full() const;
     bool empty() const;
@@ -17,7 +15,7 @@ public:
 
 private:
     T entry[maxstack];
-    int64_t count;
+    size_t count;
 };
 
 template <typename T>
@@ -49,29 +47,23 @@ T MyStack<T>::top() const {
 
 template <typename T>
 bool MyStack<T>::full() const {
-    if (count == maxstack)
-        return true;
-    else
-        return false;
+    return count >= maxstack;
 }
 
 template <typename T>
 bool MyStack<T>::empty() const {
-    if (count == 0)
-        return true;
-    else
-        return false;
+    return count == 0;
 }
 
 template <typename T>
 void MyStack<T>::clear() {
-    for (int64_t i = 0; i < count; i++) {
+    for (size_t i = 0; i < count; i++) {
         entry[i] = 0;
     }
     count = 0;
 }
 
 template <typename T>
-int64_t MyStack<T>::size() const {
+size_t MyStack<T>::size() const {
     return count;
 }
