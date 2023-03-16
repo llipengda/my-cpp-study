@@ -22,62 +22,62 @@ T power(T a, ll b) {
     }
     return res;
 }
-struct Z {
+struct ModInt {
     int x;
-    Z(int x = 0) : x(_norm(x)) {}
-    Z(ll x) : x(_norm(x % mod)) {}
+    ModInt(int x = 0) : x(_norm(x)) {}
+    ModInt(ll x) : x(_norm(x % mod)) {}
     int val() const {
         return x;
     }
-    Z operator-() const {
-        return Z(_norm(mod - x));
+    ModInt operator-() const {
+        return ModInt(_norm(mod - x));
     }
-    Z inv() const {
+    ModInt inv() const {
         assert(x != 0);
         return power(*this, mod - 2);
     }
-    Z& operator*=(const Z& rhs) {
+    ModInt& operator*=(const ModInt& rhs) {
         x = ll(x) * rhs.x % mod;
         return *this;
     }
-    Z& operator+=(const Z& rhs) {
+    ModInt& operator+=(const ModInt& rhs) {
         x = _norm(x + rhs.x);
         return *this;
     }
-    Z& operator-=(const Z& rhs) {
+    ModInt& operator-=(const ModInt& rhs) {
         x = _norm(x - rhs.x);
         return *this;
     }
-    Z& operator/=(const Z& rhs) {
+    ModInt& operator/=(const ModInt& rhs) {
         return *this *= rhs.inv();
     }
-    friend Z operator*(const Z& lhs, const Z& rhs) {
-        Z res = lhs;
+    friend ModInt operator*(const ModInt& lhs, const ModInt& rhs) {
+        ModInt res = lhs;
         res *= rhs;
         return res;
     }
-    friend Z operator+(const Z& lhs, const Z& rhs) {
-        Z res = lhs;
+    friend ModInt operator+(const ModInt& lhs, const ModInt& rhs) {
+        ModInt res = lhs;
         res += rhs;
         return res;
     }
-    friend Z operator-(const Z& lhs, const Z& rhs) {
-        Z res = lhs;
+    friend ModInt operator-(const ModInt& lhs, const ModInt& rhs) {
+        ModInt res = lhs;
         res -= rhs;
         return res;
     }
-    friend Z operator/(const Z& lhs, const Z& rhs) {
-        Z res = lhs;
+    friend ModInt operator/(const ModInt& lhs, const ModInt& rhs) {
+        ModInt res = lhs;
         res /= rhs;
         return res;
     }
-    friend std::istream& operator>>(std::istream& is, Z& a) {
+    friend std::istream& operator>>(std::istream& is, ModInt& a) {
         ll v;
         is >> v;
-        a = Z(v);
+        a = ModInt(v);
         return is;
     }
-    friend std::ostream& operator<<(std::ostream& os, const Z& a) {
+    friend std::ostream& operator<<(std::ostream& os, const ModInt& a) {
         return os << a.val();
     }
 };
