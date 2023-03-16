@@ -49,9 +49,7 @@ void BigInt::string_to_vector() {
 }
 
 void BigInt::vector_to_string() {
-    while (v.back() == 0) {
-        v.pop_back();
-    }
+    while (v.back() == 0 && v.size() > 1) v.pop_back();
     std::reverse(v.begin(), v.end());
     s.resize(f == 1 ? v.size() : v.size() + 1);
     if (f == -1) s[0] = '-';
@@ -157,9 +155,12 @@ BigInt& BigInt::operator+=(const BigInt& other) {
         }
         size_t positive_pos = 0;
         if (negative_pos != 0) {
-            for (; v[positive_pos] == 0; positive_pos++);
-            v[positive_pos] = 10 - v[positive_pos];
-            v[negative_pos]--;
+            for (; v[positive_pos] == 0; positive_pos++)
+                ;
+            if (positive_pos != negative_pos) {
+                v[positive_pos] = 10 - v[positive_pos];
+                v[negative_pos]--;
+            }
         }
         for (size_t i = positive_pos + 1; i < negative_pos; i++) {
             v[i] = 9 - v[i];
@@ -202,7 +203,7 @@ std::istream& operator>>(std::istream& in, BigInt& a) {
 
 int main() {
     BigInt a, b;
-    std::cin >> a >> b;
-    std::cout << (a + b) << std::endl;
-    std::cout << (a - b) << std::endl;
+    while (std::cin >> a >> b) {
+        std::cout << (a - b) << std::endl;
+    }
 }
