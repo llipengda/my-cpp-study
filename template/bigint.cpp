@@ -1,7 +1,9 @@
 #include <algorithm>
+#include <bits/stdc++.h>
 #include <iostream>
 #include <string>
 #include <vector>
+
 
 class BigInt {
 public:
@@ -15,11 +17,15 @@ public:
     BigInt& operator=(const std::string& other);
     BigInt& operator=(const char* other);
     BigInt& operator=(long long& other);
-    int operator[](const size_t index) const { return v[index]; };
     friend BigInt operator+(const BigInt& lhs, const BigInt& rhs);
     friend BigInt operator-(const BigInt& lhs, const BigInt& rhs);
+    friend BigInt operator*(const BigInt& lhs, const BigInt& rhs);
+    friend BigInt operator*(const BigInt& lhs, const long long& rhs);
+    friend BigInt operator/(const BigInt& lhs, const BigInt& rhs);
     BigInt& operator+=(const BigInt& other);
     BigInt& operator-=(const BigInt& other);
+    BigInt& operator*=(const BigInt& other);
+    BigInt& operator*=(const long long& other);
     bool operator<(const BigInt& other) const;
     bool operator>(const BigInt& other) const;
     bool operator<=(const BigInt& other) const;
@@ -55,6 +61,10 @@ void BigInt::vector_to_string() {
     if (f == -1) s[0] = '-';
     for (size_t i = (f == 1 ? 0 : 1); i < s.size(); i++) {
         s[i] = v[f == 1 ? i : i - 1] + '0';
+    }
+    if (s == "-0") {
+        s = "0";
+        f = 0;
     }
     std::reverse(v.begin(), v.end());
 }
@@ -179,6 +189,16 @@ BigInt& BigInt::operator-=(const BigInt& other) {
     return *this;
 }
 
+BigInt& BigInt::operator*=(const BigInt& other) {
+    *this = *this * other;
+    return *this;
+}
+
+BigInt& BigInt::operator*=(const long long& other) {
+    *this = *this * other;
+    return *this;
+}
+
 BigInt operator+(const BigInt& lhs, const BigInt& rhs) {
     BigInt res(lhs);
     return res += rhs;
@@ -187,6 +207,61 @@ BigInt operator+(const BigInt& lhs, const BigInt& rhs) {
 BigInt operator-(const BigInt& lhs, const BigInt& rhs) {
     BigInt res(lhs);
     return res -= rhs;
+}
+
+BigInt operator*(const BigInt& lhs, const BigInt& rhs) {
+    if (lhs.s == "0" || rhs.s == "0") {
+        return BigInt(0LL);
+    }
+    BigInt res;
+    if (lhs.f == rhs.f) {
+        res.f = 1;
+    } else {
+        res.f = -1;
+    }
+    res.v.resize(lhs.v.size() + rhs.v.size());
+    for (auto& i : res.v) i = 0;
+    for (size_t i = 0; i < lhs.v.size(); i++) {
+        for (size_t j = 0; j < rhs.v.size(); j++) {
+            res.v[i + j] += lhs.v[i] * rhs.v[j];
+            if (res.v[i + j] >= 10) {
+                res.v[i + j + 1] += res.v[i + j] / 10;
+                res.v[i + j] %= 10;
+            }
+        }
+    }
+    res.vector_to_string();
+    return res;
+}
+
+BigInt operator*(const BigInt& lhs, const long long& rhs) {
+    if (lhs.s == "0" || rhs == 0) {
+        return BigInt(0LL);
+    }
+    if (rhs > 9223372036854775807LL / 9) {
+        return lhs * BigInt(rhs);
+    }
+    BigInt res;
+    if (lhs.f == (rhs > 0 ? 1 : (rhs < 0 ? -1 : 0))) {
+        res.f = 1;
+    } else {
+        res.f = -1;
+    }
+    res.v.resize(lhs.v.size() + std::to_string(rhs).size());
+    std::vector<unsigned long long> tmp_v(res.v.size(), 0);
+    for (auto& i : res.v) i = 0;
+    for (size_t i = 0; i < lhs.v.size(); i++) {
+        tmp_v[i] += lhs.v[i] * rhs;
+        tmp_v[i + 1] += tmp_v[i] / 10;
+        tmp_v[i] %= 10;
+    }
+    for (size_t i = lhs.v.size(); i < tmp_v.size(); i++) {
+        tmp_v[i + 1] += tmp_v[i] / 10;
+        tmp_v[i] %= 10;
+    }
+    for (size_t i = 0; i < tmp_v.size(); i++) res.v[i] = tmp_v[i];
+    res.vector_to_string();
+    return res;
 }
 
 std::ostream& operator<<(std::ostream& out, const BigInt& a) {
@@ -203,7 +278,10 @@ std::istream& operator>>(std::istream& in, BigInt& a) {
 
 int main() {
     BigInt a, b;
-    while (std::cin >> a >> b) {
-        std::cout << (a - b) << std::endl;
+    int n = 1;
+    // std::cin >> n;
+    while (n--) {
+        std::cin >> a >> b;
+        std::cout << a * b << std::endl;
     }
 }
