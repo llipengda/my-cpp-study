@@ -1,9 +1,70 @@
 #include <algorithm>
-#include <bits/stdc++.h>
+#include <cmath>
+#include <complex>
 #include <iostream>
 #include <string>
 #include <vector>
 
+bool use_fft = false;
+
+class FFT {
+private:
+    int _n, _m, _N;
+    std::vector<int> r;
+    const double PI = std::acos(-1);
+
+    inline void expand(int temp) {
+        int L = 0;
+        for (_N = 1; _N <= temp; _N <<= 1, L++)
+            ;
+        r.resize(_N + 1);
+        for (int i = 0; i < _N; ++i) r[i] = r[i >> 1] >> 1 | (i & 1) << (L - 1);
+        return;
+    }
+
+    void fft(std::vector<std::complex<double>>& A, int f) {
+        for (int i = 0; i < _N; ++i)
+            if (i < r[i]) std::swap(A[i], A[r[i]]);
+        for (int i = 1; i < _N; i <<= 1) {
+            std::complex<double> wn(std::cos(PI / i), f * std::sin(PI / i));
+            for (int j = 0; j < _N; j += i << 1) {
+                std::complex<double> w(1, 0);
+                for (int k = 0; k < i; ++k, w *= wn) {
+                    std::complex<double> x = A[j + k], y = w * A[i + j + k];
+                    A[j + k] = x + y;
+                    A[i + j + k] = x - y;
+                }
+            }
+        }
+        return;
+    }
+
+    inline std::vector<int> mul(std::vector<std::complex<double>>& A, std::vector<std::complex<double>>& B) {
+        expand(_n + _m);
+        A.resize(_N + 1);
+        B.resize(_N + 1);
+        fft(A, 1);
+        fft(B, 1);
+        for (int i = 0; i <= _N; ++i) A[i] *= B[i];
+        fft(A, -1);
+        std::vector<int> vec;
+        for (int i = 0; i < _n + _m - 1; ++i)
+            vec.push_back((int)(A[i].real() / _N + 0.5));
+        return vec;
+    }
+
+public:
+    inline std::vector<int> multi(std::vector<int>& AA, std::vector<int>& BB) {
+        std::vector<std::complex<double>> A, B;
+        _n = AA.size();
+        _m = BB.size();
+        A.resize(_n);
+        B.resize(_m);
+        for (int i = 0; i < _n; ++i) A[i] = AA[i];
+        for (int i = 0; i < _m; ++i) B[i] = BB[i];
+        return mul(A, B);
+    }
+};
 
 class BigInt {
 public:
@@ -114,9 +175,7 @@ bool BigInt::operator<=(const BigInt& other) const { return !(*this > other); }
 
 bool BigInt::operator>=(const BigInt& other) const { return !(*this < other); }
 
-bool BigInt::operator==(const BigInt& other) const {
-    return !((*this < other) && (*this > other));
-}
+bool BigInt::operator==(const BigInt& other) const { return !((*this < other) && (*this > other)); }
 
 bool BigInt::operator!=(const BigInt& other) const { return !(*this == other); }
 
@@ -210,14 +269,27 @@ BigInt operator-(const BigInt& lhs, const BigInt& rhs) {
 }
 
 BigInt operator*(const BigInt& lhs, const BigInt& rhs) {
-    if (lhs.s == "0" || rhs.s == "0") {
-        return BigInt(0LL);
-    }
     BigInt res;
     if (lhs.f == rhs.f) {
         res.f = 1;
     } else {
         res.f = -1;
+    }
+    if (use_fft) {
+        FFT F;
+        std::vector<int> _lhs = lhs.v;
+        std::vector<int> _rhs = rhs.v;
+        res.v = F.multi(_lhs, _rhs);
+        res.v.resize(lhs.v.size() + rhs.v.size());
+        for (size_t i = 0; i < res.v.size(); i++) {
+            res.v[i + 1] += res.v[i] / 10;
+            res.v[i] %= 10;
+        }
+        res.vector_to_string();
+        return res;
+    }
+    if (lhs.s == "0" || rhs.s == "0") {
+        return BigInt(0LL);
     }
     res.v.resize(lhs.v.size() + rhs.v.size());
     for (auto& i : res.v) i = 0;
@@ -238,7 +310,7 @@ BigInt operator*(const BigInt& lhs, const long long& rhs) {
     if (lhs.s == "0" || rhs == 0) {
         return BigInt(0LL);
     }
-    if (rhs > 9223372036854775807LL / 9) {
+    if (rhs > 9223372036854775807LL / 9 || use_fft) {
         return lhs * BigInt(rhs);
     }
     BigInt res;
@@ -277,9 +349,10 @@ std::istream& operator>>(std::istream& in, BigInt& a) {
 }
 
 int main() {
+    use_fft = true;
     BigInt a, b;
     int n = 1;
-    // std::cin >> n;
+    std::cin >> n;
     while (n--) {
         std::cin >> a >> b;
         std::cout << a * b << std::endl;
