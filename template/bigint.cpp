@@ -5,65 +5,19 @@
 #include <string>
 #include <vector>
 
-bool use_fft = false;
+bool using_fft = false;
 
 class FFT {
 private:
     int _n, _m, _N;
     std::vector<int> r;
     const double PI = std::acos(-1);
-
-    inline void expand(int temp) {
-        int L = 0;
-        for (_N = 1; _N <= temp; _N <<= 1, L++)
-            ;
-        r.resize(_N + 1);
-        for (int i = 0; i < _N; ++i) r[i] = r[i >> 1] >> 1 | (i & 1) << (L - 1);
-        return;
-    }
-
-    void fft(std::vector<std::complex<double>>& A, int f) {
-        for (int i = 0; i < _N; ++i)
-            if (i < r[i]) std::swap(A[i], A[r[i]]);
-        for (int i = 1; i < _N; i <<= 1) {
-            std::complex<double> wn(std::cos(PI / i), f * std::sin(PI / i));
-            for (int j = 0; j < _N; j += i << 1) {
-                std::complex<double> w(1, 0);
-                for (int k = 0; k < i; ++k, w *= wn) {
-                    std::complex<double> x = A[j + k], y = w * A[i + j + k];
-                    A[j + k] = x + y;
-                    A[i + j + k] = x - y;
-                }
-            }
-        }
-        return;
-    }
-
-    inline std::vector<int> mul(std::vector<std::complex<double>>& A, std::vector<std::complex<double>>& B) {
-        expand(_n + _m);
-        A.resize(_N + 1);
-        B.resize(_N + 1);
-        fft(A, 1);
-        fft(B, 1);
-        for (int i = 0; i <= _N; ++i) A[i] *= B[i];
-        fft(A, -1);
-        std::vector<int> vec;
-        for (int i = 0; i < _n + _m - 1; ++i)
-            vec.push_back((int)(A[i].real() / _N + 0.5));
-        return vec;
-    }
+    void expand(int temp);
+    void fft(std::vector<std::complex<double>>& A, int f);
+    std::vector<int> mul(std::vector<std::complex<double>>& A, std::vector<std::complex<double>>& B);
 
 public:
-    inline std::vector<int> multi(std::vector<int>& AA, std::vector<int>& BB) {
-        std::vector<std::complex<double>> A, B;
-        _n = AA.size();
-        _m = BB.size();
-        A.resize(_n);
-        B.resize(_m);
-        for (int i = 0; i < _n; ++i) A[i] = AA[i];
-        for (int i = 0; i < _m; ++i) B[i] = BB[i];
-        return mul(A, B);
-    }
+    std::vector<int> multi(std::vector<int>& AA, std::vector<int>& BB);
 };
 
 class BigInt {
@@ -83,10 +37,17 @@ public:
     friend BigInt operator*(const BigInt& lhs, const BigInt& rhs);
     friend BigInt operator*(const BigInt& lhs, const long long& rhs);
     friend BigInt operator/(const BigInt& lhs, const BigInt& rhs);
+    friend BigInt operator/(const BigInt& lhs, const long long& rhs);
+    friend BigInt operator%(const BigInt& lhs, const BigInt& rhs);
+    friend BigInt operator%(const BigInt& lhs, const long long& rhs);
     BigInt& operator+=(const BigInt& other);
     BigInt& operator-=(const BigInt& other);
     BigInt& operator*=(const BigInt& other);
     BigInt& operator*=(const long long& other);
+    BigInt& operator/=(const BigInt& other);
+    BigInt& operator/=(const long long& other);
+    BigInt& operator%=(const BigInt& other);
+    BigInt& operator%=(const long long& other);
     bool operator<(const BigInt& other) const;
     bool operator>(const BigInt& other) const;
     bool operator<=(const BigInt& other) const;
@@ -95,16 +56,69 @@ public:
     bool operator!=(const BigInt& other) const;
     friend std::ostream& operator<<(std::ostream& out, const BigInt& a);
     friend std::istream& operator>>(std::istream& in, BigInt& a);
+    size_t size() const;
+    bool iszero() const;
 
 private:
     void string_to_vector();
     void vector_to_string();
+    bool greater_eq(std::vector<int> a, std::vector<int> b, int last_dg, int len);
 
 protected:
     std::vector<int> v;
     std::string s;
     int f = 1;
 };
+
+void FFT::expand(int temp) {
+    int L = 0;
+    for (_N = 1; _N <= temp; _N <<= 1, L++)
+        ;
+    r.resize(_N + 1);
+    for (int i = 0; i < _N; ++i) r[i] = r[i >> 1] >> 1 | (i & 1) << (L - 1);
+    return;
+}
+
+void FFT::fft(std::vector<std::complex<double>>& A, int f) {
+    for (int i = 0; i < _N; ++i)
+        if (i < r[i]) std::swap(A[i], A[r[i]]);
+    for (int i = 1; i < _N; i <<= 1) {
+        std::complex<double> wn(std::cos(PI / i), f * std::sin(PI / i));
+        for (int j = 0; j < _N; j += i << 1) {
+            std::complex<double> w(1, 0);
+            for (int k = 0; k < i; ++k, w *= wn) {
+                std::complex<double> x = A[j + k], y = w * A[i + j + k];
+                A[j + k] = x + y;
+                A[i + j + k] = x - y;
+            }
+        }
+    }
+}
+
+std::vector<int> FFT::mul(std::vector<std::complex<double>>& A, std::vector<std::complex<double>>& B) {
+    expand(_n + _m);
+    A.resize(_N + 1);
+    B.resize(_N + 1);
+    fft(A, 1);
+    fft(B, 1);
+    for (int i = 0; i <= _N; ++i) A[i] *= B[i];
+    fft(A, -1);
+    std::vector<int> vec;
+    for (int i = 0; i < _n + _m - 1; ++i)
+        vec.push_back((int)(A[i].real() / _N + 0.5));
+    return vec;
+}
+
+std::vector<int> FFT::multi(std::vector<int>& AA, std::vector<int>& BB) {
+    std::vector<std::complex<double>> A, B;
+    _n = AA.size();
+    _m = BB.size();
+    A.resize(_n);
+    B.resize(_m);
+    for (int i = 0; i < _n; ++i) A[i] = AA[i];
+    for (int i = 0; i < _m; ++i) B[i] = BB[i];
+    return mul(A, B);
+}
 
 void BigInt::string_to_vector() {
     if (s[0] == '-') f = -1;
@@ -128,6 +142,15 @@ void BigInt::vector_to_string() {
         f = 0;
     }
     std::reverse(v.begin(), v.end());
+}
+
+bool greater_eq(std::vector<int> a, std::vector<int> b, int last_dg, int len) {
+    if (a[last_dg + len] != 0) return true;
+    for (int i = len - 1; i >= 0; --i) {
+        if (a[last_dg + i] > b[i]) return true;
+        if (a[last_dg + i] < b[i]) return false;
+    }
+    return true;
 }
 
 BigInt& BigInt::operator=(const BigInt& other) {
@@ -258,6 +281,26 @@ BigInt& BigInt::operator*=(const long long& other) {
     return *this;
 }
 
+BigInt& BigInt::operator/=(const BigInt& other) {
+    *this = *this / other;
+    return *this;
+}
+
+BigInt& BigInt::operator/=(const long long& other) {
+    *this = *this / other;
+    return *this;
+}
+
+BigInt& BigInt::operator%=(const BigInt& other) {
+    *this = *this % other;
+    return *this;
+}
+
+BigInt& BigInt::operator%=(const long long& other) {
+    *this = *this % other;
+    return *this;
+}
+
 BigInt operator+(const BigInt& lhs, const BigInt& rhs) {
     BigInt res(lhs);
     return res += rhs;
@@ -275,7 +318,7 @@ BigInt operator*(const BigInt& lhs, const BigInt& rhs) {
     } else {
         res.f = -1;
     }
-    if (use_fft) {
+    if (using_fft) {
         FFT F;
         std::vector<int> _lhs = lhs.v;
         std::vector<int> _rhs = rhs.v;
@@ -310,7 +353,7 @@ BigInt operator*(const BigInt& lhs, const long long& rhs) {
     if (lhs.s == "0" || rhs == 0) {
         return BigInt(0LL);
     }
-    if (rhs > 9223372036854775807LL / 9 || use_fft) {
+    if (rhs > 9223372036854775807LL / 9 || using_fft) {
         return lhs * BigInt(rhs);
     }
     BigInt res;
@@ -336,6 +379,58 @@ BigInt operator*(const BigInt& lhs, const long long& rhs) {
     return res;
 }
 
+BigInt operator/(const BigInt& lhs, const BigInt& rhs) {
+    BigInt res;
+    if (rhs.s == "0") throw std::runtime_error("division by zero");
+    BigInt rem = lhs;
+    rem.v.resize(lhs.v.size() + rhs.v.size());
+    res.v.resize(lhs.v.size() + rhs.v.size());
+    for (int i = lhs.v.size() - rhs.v.size(); i >= 0; i--) {
+        while (greater_eq(rem.v, rhs.v, i, rhs.v.size())) {
+            for (int j = 0; j < rhs.v.size(); ++j) {
+                rem.v[i + j] -= rhs.v[j];
+                if (rem.v[i + j] < 0) {
+                    rem.v[i + j + 1] -= 1;
+                    rem.v[i + j] += 10;
+                }
+            }
+            res.v[i] += 1;
+        }
+    }
+    res.vector_to_string();
+    return res;
+}
+
+BigInt operator/(const BigInt& lhs, const long long& rhs) {
+    return lhs / BigInt(rhs);
+}
+
+BigInt operator%(const BigInt& lhs, const BigInt& rhs) {
+    BigInt res;
+    if (rhs.s == "0") throw std::runtime_error("division by zero");
+    BigInt rem = lhs;
+    rem.v.resize(lhs.v.size() + rhs.v.size());
+    res.v.resize(lhs.v.size() + rhs.v.size());
+    for (int i = lhs.v.size() - rhs.v.size(); i >= 0; i--) {
+        while (greater_eq(rem.v, rhs.v, i, rhs.v.size())) {
+            for (int j = 0; j < rhs.v.size(); ++j) {
+                rem.v[i + j] -= rhs.v[j];
+                if (rem.v[i + j] < 0) {
+                    rem.v[i + j + 1] -= 1;
+                    rem.v[i + j] += 10;
+                }
+            }
+            res.v[i] += 1;
+        }
+    }
+    rem.vector_to_string();
+    return rem;
+}
+
+BigInt operator%(const BigInt& lhs, const long long& rhs) {
+    return lhs / BigInt(rhs);
+}
+
 std::ostream& operator<<(std::ostream& out, const BigInt& a) {
     out << a.s;
     return out;
@@ -348,13 +443,25 @@ std::istream& operator>>(std::istream& in, BigInt& a) {
     return in;
 }
 
+size_t BigInt::size() const {
+    return v.size();
+}
+
+bool BigInt::iszero() const {
+    return s == "0";
+}
+
 int main() {
-    use_fft = true;
+    using_fft = true;
     BigInt a, b;
     int n = 1;
-    std::cin >> n;
+    // std::cin >> n;
     while (n--) {
         std::cin >> a >> b;
+        std::cout << a + b << std::endl;
+        std::cout << a - b << std::endl;
         std::cout << a * b << std::endl;
+        std::cout << a / b << std::endl;
+        std::cout << a % b << std::endl;
     }
 }
