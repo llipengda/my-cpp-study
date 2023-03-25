@@ -381,6 +381,11 @@ BigInt operator*(const BigInt& lhs, const long long& rhs) {
 
 BigInt operator/(const BigInt& lhs, const BigInt& rhs) {
     BigInt res;
+    if (lhs.f == rhs.f) {
+        res.f = 1;
+    } else {
+        res.f = -1;
+    }
     if (rhs.s == "0") throw std::runtime_error("division by zero");
     BigInt rem = lhs;
     rem.v.resize(lhs.v.size() + rhs.v.size());
@@ -407,6 +412,11 @@ BigInt operator/(const BigInt& lhs, const long long& rhs) {
 
 BigInt operator%(const BigInt& lhs, const BigInt& rhs) {
     BigInt res;
+    if (lhs.f == rhs.f) {
+        res.f = 1;
+    } else {
+        res.f = -1;
+    }
     if (rhs.s == "0") throw std::runtime_error("division by zero");
     BigInt rem = lhs;
     rem.v.resize(lhs.v.size() + rhs.v.size());
