@@ -264,3 +264,125 @@ void MyList<T>::remove(const T& value) {
         }
     }
 }
+
+#include <iostream>
+struct Term {
+    int64_t value;
+    int64_t power;
+};
+class Pol : public MyList<Term> {
+public:
+    friend Pol operator+(Pol& lhs, Pol& rhs);
+    friend Pol operator-(Pol& lhs, Pol& rhs);
+    friend Pol operator*(Pol& lhs, Pol& rhs);
+    void print();
+};
+
+Pol operator+(Pol& lhs, Pol& rhs) {
+    Pol ans;
+    while (!(lhs.empty() && rhs.empty())) {
+        if (lhs.empty()) {
+            ans.push_back(rhs.front());
+            rhs.pop_front();
+        } else if (rhs.empty()) {
+            ans.push_back(lhs.front());
+            lhs.pop_front();
+        } else if (lhs.front().power > rhs.front().power) {
+            ans.push_back(lhs.front());
+            lhs.pop_front();
+        } else if (lhs.front().power < rhs.front().power) {
+            ans.push_back(rhs.front());
+            rhs.pop_front();
+        } else {
+            ans.push_back({lhs.front().value + rhs.front().value, lhs.front().power});
+            lhs.pop_front();
+            rhs.pop_front();
+        }
+    }
+    return ans;
+}
+
+Pol operator-(Pol& lhs, Pol& rhs) {
+    Pol ans;
+    while (!(lhs.empty() && rhs.empty())) {
+        if (lhs.empty()) {
+            ans.push_back({-rhs.front().value, rhs.front().power});
+            rhs.pop_front();
+        } else if (rhs.empty()) {
+            ans.push_back(lhs.front());
+            lhs.pop_front();
+        } else if (lhs.front().power > rhs.front().power) {
+            ans.push_back(lhs.front());
+            lhs.pop_front();
+        } else if (lhs.front().power < rhs.front().power) {
+            ans.push_back({-rhs.front().value, rhs.front().power});
+            rhs.pop_front();
+        } else {
+            ans.push_back({lhs.front().value - rhs.front().value, lhs.front().power});
+            lhs.pop_front();
+            rhs.pop_front();
+        }
+    }
+    return ans;
+}
+
+Pol operator*(Pol& lhs, Pol& rhs) {
+    Pol ans;
+    Pol temp = lhs;
+    while (!rhs.empty()) {
+        for (auto& i : temp) {
+            i.power += rhs.front().power;
+            i.value *= rhs.front().value;
+        }
+        ans = ans + temp;
+        rhs.pop_front();
+        temp = lhs;
+    }
+    return ans;
+}
+
+void Pol::print() {
+    while (!empty() && begin()->value == 0) {
+        pop_front();
+    }
+    if (empty()) {
+        std::cout << 0 << std::endl;
+        return;
+    }
+    if (begin()->value != 0) {
+        if (begin()->value == -1) {
+            std::cout << '-';
+        } else if (begin()->value != 1) {
+            std::cout << begin()->value;
+        }
+        if (begin()->power != 0) {
+            std::cout << 'X';
+            if (begin()->power != 1) {
+                std::cout << '^' << begin()->power;
+            }
+        }
+        if (std::abs(begin()->value) == 1 && begin()->power == 0) {
+            std::cout << 1;
+        }
+    }
+    for (auto it = ++begin(); it != end(); it++) {
+        if (it->value != 0) {
+            if (it->power > 1) {
+                if (std::abs(it->value) == 1) {
+                    std::cout << "+-"[it->value < 0] << "X^" << it->power;
+                } else {
+                    std::cout << "+-"[it->value < 0] << std::abs(it->value) << "X^" << it->power;
+                }
+            } else if (it->power == 1) {
+                if (std::abs(it->value) == 1) {
+                    std::cout << "+-"[it->value < 0] << 'X';
+                } else {
+                    std::cout << "+-"[it->value < 0] << std::abs(it->value) << 'X';
+                }
+            } else if (it->power == 0) {
+                std::cout << "+-"[it->value < 0] << std::abs(it->value);
+            }
+        }
+    }
+    std::cout << std::endl;
+}

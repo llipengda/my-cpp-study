@@ -1,6 +1,7 @@
 bin/
 .cph/
 .vscode/
+compare/
 in.txt
 out.txt
 .clang-*
