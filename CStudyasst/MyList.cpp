@@ -47,10 +47,10 @@ class MyList {
 public:
     typedef MyList::ListIterator iterator;
     typedef MyList::ListNode node;
-    MyList() : head(nullptr), cur(nullptr), pre(nullptr) {}
+    MyList() : head(nullptr) {}
     MyList(const MyList& other);
     ~MyList();
-    size_t size();
+    size_t size() const;
     bool empty() const;
     void push_back(const T& item);
     void push_front(const T& item);
@@ -59,25 +59,27 @@ public:
     void clear();
     void reverse();
     void insert(iterator pos, const T& item);
+    void insert(size_t pos, const T& item);
     void insert(const T& item);
     void remove(const T& value);
     iterator erase(iterator pos);
     iterator erase(iterator first, iterator last);
+    void erase(size_t pos);
+    void erase(size_t first, size_t second);
     iterator begin() const;
     iterator end() const;
-    T& back();
-    T& front();
+    T& back() const;
+    T& front() const;
     MyList& operator=(const MyList& other);
     void insertion_sort();
 
 protected:
     node* head;
-    node* cur;
-    node* pre;
 };
 
 template <typename T>
 MyList<T>::MyList(const MyList& other) {
+    node *cur, *pre;
     node* _head = other.head;
     cur = new node(other.head->entry);
     head = cur;
@@ -95,14 +97,15 @@ bool MyList<T>::empty() const {
 }
 
 template <typename T>
-size_t MyList<T>::size() {
+size_t MyList<T>::size() const {
     size_t cnt = 0;
-    for (cur = head; cur != nullptr; cur = cur->next) cnt++;
+    for (node* cur = head; cur != nullptr; cur = cur->next) cnt++;
     return cnt;
 }
 
 template <typename T>
 void MyList<T>::push_back(const T& item) {
+    node *cur, *pre;
     if (head == nullptr) {
         cur = new node(item);
         head = pre = cur;
@@ -121,6 +124,7 @@ void MyList<T>::insert(const T& item) {
 
 template <typename T>
 void MyList<T>::pop_back() {
+    node *cur, *pre;
     for (cur = head; cur->next != nullptr; cur = cur->next)
         ;
     if (cur == head) {
@@ -139,7 +143,8 @@ void MyList<T>::pop_back() {
 }
 
 template <typename T>
-T& MyList<T>::back() {
+T& MyList<T>::back() const {
+    node* cur;
     for (cur = head; cur->next != nullptr; cur = cur->next)
         ;
     if (cur == nullptr) throw std::underflow_error("underflow");
@@ -148,6 +153,7 @@ T& MyList<T>::back() {
 
 template <typename T>
 void MyList<T>::clear() {
+    node *cur, *pre;
     if (head == nullptr) return;
     pre = head;
     cur = head->next;
@@ -162,6 +168,7 @@ void MyList<T>::clear() {
 
 template <typename T>
 MyList<T>::~MyList() {
+    node *cur, *pre;
     if (head == nullptr) return;
     pre = head;
     cur = head->next;
@@ -185,6 +192,7 @@ typename MyList<T>::iterator MyList<T>::end() const {
 
 template <typename T>
 void MyList<T>::insert(iterator pos, const T& item) {
+    node *cur, *pre;
     if (pos._Node == head) {
         head = new node(item, head);
         return;
@@ -196,7 +204,13 @@ void MyList<T>::insert(iterator pos, const T& item) {
 }
 
 template <typename T>
+void MyList<T>::insert(size_t pos, const T& item) {
+    insert(begin() + pos, item);
+}
+
+template <typename T>
 typename MyList<T>::iterator MyList<T>::erase(iterator pos) {
+    node *cur, *pre;
     iterator res(pos._Node->next);
     if (pos._Node == head) {
         node* temp = head;
@@ -214,6 +228,16 @@ typename MyList<T>::iterator MyList<T>::erase(iterator pos) {
 }
 
 template <typename T>
+void MyList<T>::erase(size_t pos) {
+    erase(begin() + pos);
+}
+
+template <typename T>
+void MyList<T>::erase(size_t first, size_t second) {
+    erase(begin() + first, begin() + second);
+}
+
+template <typename T>
 void MyList<T>::reverse() {
     MyList<T> temp(*this);
     clear();
@@ -225,6 +249,7 @@ void MyList<T>::reverse() {
 
 template <typename T>
 MyList<T>& MyList<T>::operator=(const MyList<T>& other) {
+    node *cur, *pre;
     node* _head = other.head;
     cur = new node(other.head->entry);
     head = cur;
@@ -255,7 +280,7 @@ void MyList<T>::pop_front() {
 }
 
 template <typename T>
-T& MyList<T>::front() {
+T& MyList<T>::front() const {
     if (head == nullptr) throw std::underflow_error("underflow");
     return head->entry;
 }
