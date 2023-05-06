@@ -59,6 +59,7 @@ public:
     void clear();
     void reverse();
     void insert(iterator pos, const T& item);
+    void insert(const T& item);
     void remove(const T& value);
     iterator erase(iterator pos);
     iterator erase(iterator first, iterator last);
@@ -67,6 +68,7 @@ public:
     T& back();
     T& front();
     MyList& operator=(const MyList& other);
+    void insertion_sort();
 
 protected:
     node* head;
@@ -113,16 +115,21 @@ void MyList<T>::push_back(const T& item) {
 }
 
 template <typename T>
+void MyList<T>::insert(const T& item) {
+    push_back(item);
+}
+
+template <typename T>
 void MyList<T>::pop_back() {
     for (cur = head; cur->next != nullptr; cur = cur->next)
-        ;
-    for (pre = head; pre->next != cur; pre = pre->next)
         ;
     if (cur == head) {
         delete cur;
         head = cur = pre = nullptr;
         return;
     }
+    for (pre = head; pre->next != cur; pre = pre->next)
+        ;
     if (cur == nullptr) throw std::underflow_error("underflow");
     delete cur;
     pre->next = nullptr;
@@ -214,7 +221,6 @@ void MyList<T>::reverse() {
         push_back(temp.back());
         temp.pop_back();
     }
-    temp.~MyList();
 }
 
 template <typename T>
@@ -262,5 +268,39 @@ void MyList<T>::remove(const T& value) {
         } else {
             it++;
         }
+    }
+}
+
+template <typename T>
+void MyList<T>::insertion_sort() {
+    node *last_sorted, *first_unsorted;
+    if (head == nullptr) return;
+    last_sorted = head;
+    while (last_sorted->next != nullptr) {
+        first_unsorted = last_sorted->next;
+        node* pre = head;
+        bool flag = false;
+        for (node* cur = head; cur != first_unsorted; cur = cur->next) {
+            if (cur == head) {
+                if (first_unsorted->entry <= cur->entry) {
+                    last_sorted->next = first_unsorted->next;
+                    first_unsorted->next = cur;
+                    head = first_unsorted;
+                    flag = true;
+                    break;
+                }
+            } else {
+                if (first_unsorted->entry > pre->entry
+                    && first_unsorted->entry <= cur->entry) {
+                    last_sorted->next = first_unsorted->next;
+                    pre->next = first_unsorted;
+                    first_unsorted->next = cur;
+                    flag = true;
+                    break;
+                }
+            }
+            pre = cur;
+        }
+        if (!flag) last_sorted = last_sorted->next;
     }
 }

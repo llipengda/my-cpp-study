@@ -236,8 +236,12 @@ BigInt& BigInt::operator+=(const BigInt& other) {
             v[i + 1]--;
         }
     }
-    if (v.back() == -1) {
-        v.pop_back();
+    if (!find_negative_pos) {
+        f = 1;
+    }
+    if (v.back() < 0) {
+        if (v.back() == -1) v.pop_back();
+        else v.back() += 10;
         f = -1;
         v[negative_pos] -= 10;
         v[negative_pos] = -v[negative_pos];
@@ -462,16 +466,12 @@ bool BigInt::iszero() const {
 }
 
 int main() {
-    using_fft = true;
+    using_fft = false;
     BigInt a, b;
-    int n = 1;
-    // std::cin >> n;
-    while (n--) {
-        std::cin >> a >> b;
-        std::cout << a + b << std::endl;
-        std::cout << a - b << std::endl;
-        std::cout << a * b << std::endl;
-        std::cout << a / b << std::endl;
-        std::cout << a % b << std::endl;
-    }
+    std::cin >> a >> b;
+    std::cout << a + b << std::endl
+              << a - b << std::endl
+              << a * b << std::endl
+              << a / b << std::endl
+              << a % b << std::endl;
 }
