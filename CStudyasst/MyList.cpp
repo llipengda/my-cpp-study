@@ -13,8 +13,8 @@ class MyList {
     };
     class ListIterator {
     public:
-        ListIterator() {}
-        ~ListIterator() {}
+        ListIterator() = default;
+        ~ListIterator() = default;
         ListIterator(ListNode* node) : _Node(node) {}
         ListIterator(const ListIterator& other) { _Node = other._Node; }
         T& operator*() const { return _Node->entry; }
@@ -65,7 +65,7 @@ public:
     iterator erase(iterator pos);
     iterator erase(iterator first, iterator last);
     void erase(size_t pos);
-    void erase(size_t first, size_t second);
+    void erase(size_t first, size_t last);
     iterator begin() const;
     iterator end() const;
     T& back() const;
@@ -233,8 +233,8 @@ void MyList<T>::erase(size_t pos) {
 }
 
 template <typename T>
-void MyList<T>::erase(size_t first, size_t second) {
-    erase(begin() + first, begin() + second);
+void MyList<T>::erase(size_t first, size_t last) {
+    erase(begin() + first, begin() + last);
 }
 
 template <typename T>
