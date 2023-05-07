@@ -5,8 +5,6 @@
 #include <string>
 #include <vector>
 
-bool using_fft = false;
-
 class FFT {
 private:
     int _n, _m, _N;
@@ -22,6 +20,7 @@ public:
 
 class BigInt {
 public:
+    static bool using_fft;
     BigInt(){};
     BigInt(const long long& x) : s(std::to_string(x)) { string_to_vector(); }
     BigInt(const std::string& s) : s(s) { string_to_vector(); }
@@ -322,7 +321,7 @@ BigInt operator*(const BigInt& lhs, const BigInt& rhs) {
     } else {
         res.f = -1;
     }
-    if (using_fft) {
+    if (BigInt::using_fft) {
         FFT F;
         std::vector<int> _lhs = lhs.v;
         std::vector<int> _rhs = rhs.v;
@@ -357,7 +356,7 @@ BigInt operator*(const BigInt& lhs, const long long& rhs) {
     if (lhs.s == "0" || rhs == 0) {
         return BigInt(0LL);
     }
-    if (rhs > 9223372036854775807LL / 9 || using_fft) {
+    if (rhs > 9223372036854775807LL / 9 || BigInt::using_fft) {
         return lhs * BigInt(rhs);
     }
     BigInt res;
@@ -465,8 +464,9 @@ bool BigInt::iszero() const {
     return s == "0";
 }
 
+bool BigInt::using_fft = false;
+
 int main() {
-    using_fft = false;
     BigInt a, b;
     std::cin >> a >> b;
     std::cout << a + b << std::endl
