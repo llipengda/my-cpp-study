@@ -14,7 +14,7 @@ class MyList {
     class ListIterator {
     public:
         ListIterator() = default;
-        ~ListIterator() = default;
+        ~ListIterator() noexcept = default;
         ListIterator(ListNode* node) : _Node(node) {}
         ListIterator(const ListIterator& other) { _Node = other._Node; }
         T& operator*() const { return _Node->entry; }
@@ -49,7 +49,7 @@ public:
     typedef MyList::ListNode node;
     MyList() : head(nullptr) {}
     MyList(const MyList& other);
-    ~MyList();
+    ~MyList() noexcept;
     size_t size() const;
     bool empty() const;
     void push_back(const T& item);
@@ -72,9 +72,13 @@ public:
     T& front() const;
     MyList& operator=(const MyList& other);
     void insertion_sort();
+    void merge_sort();
 
 protected:
     node* head;
+
+private:
+    void _merge_sort(node*& list);
 };
 
 template <typename T>
@@ -167,7 +171,7 @@ void MyList<T>::clear() {
 }
 
 template <typename T>
-MyList<T>::~MyList() {
+MyList<T>::~MyList() noexcept {
     node *cur, *pre;
     if (head == nullptr) return;
     pre = head;
@@ -328,4 +332,47 @@ void MyList<T>::insertion_sort() {
         }
         if (!flag) last_sorted = last_sorted->next;
     }
+}
+
+template <typename T>
+void MyList<T>::merge_sort() {
+    _merge_sort(head);
+}
+
+template <typename T>
+void MyList<T>::_merge_sort(node*& list) {
+    if (list == nullptr || list->next == nullptr) return;
+    // divide
+    node *mid = list, *sec = list, *pos = list;
+    while (pos != nullptr && pos->next != nullptr) {
+        mid = sec;
+        sec = sec->next;
+        pos = pos->next->next;
+    }
+    mid->next = nullptr;
+    // sort
+    _merge_sort(list);
+    _merge_sort(sec);
+    // merge
+    node* cur = new node;
+    node* new_head = cur;
+    node* fst = list;
+    while (fst != nullptr && sec != nullptr) {
+        if (fst->entry < sec->entry) {
+            cur->next = fst;
+            fst = fst->next;
+            cur = cur->next;
+        } else {
+            cur->next = sec;
+            sec = sec->next;
+            cur = cur->next;
+        }
+    }
+    if (fst == nullptr) {
+        cur->next = sec;
+    } else {
+        cur->next = fst;
+    }
+    list = new_head->next;
+    delete new_head;
 }
