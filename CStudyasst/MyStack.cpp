@@ -1,6 +1,9 @@
+#include <algorithm>
+#include <iostream>
 #include <stdexcept>
 
-const int maxstack = 10000;
+
+const int maxstack = 500;
 template <typename T>
 class MyStack {
 public:
@@ -12,10 +15,15 @@ public:
     bool full() const;
     bool empty() const;
     T top() const;
+    void quick_sort();
+    void print() const;
 
 protected:
     T entry[maxstack];
     size_t count;
+
+private:
+    void _M_quick_sort(int l, int r);
 };
 
 template <typename T>
@@ -59,4 +67,51 @@ void MyStack<T>::clear() {
 template <typename T>
 size_t MyStack<T>::size() const {
     return count;
+}
+
+template <typename T>
+void MyStack<T>::_M_quick_sort(int l, int r) {
+    static int i = 0;
+    ++i;
+    if (l >= r) return;
+    std::swap(entry[l], entry[r - 1]);
+    int pos = l;
+    int pivot = entry[l];
+    for (int i = l + 1; i < r; i++) {
+        if (entry[i] < pivot) {
+            pos++;
+            std::swap(entry[pos], entry[i]);
+        }
+    }
+    std::swap(entry[l], entry[pos]);
+    if (i == 1) {
+        print();
+    }
+    _M_quick_sort(l, pos);
+    _M_quick_sort(pos + 1, r);
+}
+
+template <typename T>
+void MyStack<T>::quick_sort() {
+    _M_quick_sort(0, count);
+}
+
+template <typename T>
+void MyStack<T>::print() const {
+    for (int i = 0; i < count; i++) {
+        std::cout << entry[i] << " \n"[i == count - 1];
+    }
+}
+
+int main() {
+    MyStack<int> s;
+    int n;
+    std::cin >> n;
+    while (n--) {
+        int t;
+        std::cin >> t;
+        s.push(t);
+    }
+    s.quick_sort();
+    s.print();
 }
