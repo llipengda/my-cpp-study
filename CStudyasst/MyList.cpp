@@ -13,23 +13,24 @@ class MyList {
     };
     class ListIterator {
     public:
+        ListNode* _M_node;
         ListIterator() = default;
         ~ListIterator() noexcept = default;
-        ListIterator(ListNode* node) : _Node(node) {}
-        ListIterator(const ListIterator& other) { _Node = other._Node; }
-        T& operator*() const { return _Node->entry; }
-        T* operator->() const { return static_cast<T*>(&(_Node->entry)); }
+        ListIterator(ListNode* node) : _M_node(node) {}
+        ListIterator(const ListIterator& other) { _M_node = other._M_node; }
+        T& operator*() const { return _M_node->entry; }
+        T* operator->() const { return static_cast<T*>(&(_M_node->entry)); }
         ListIterator& operator++(int) {
             ListIterator* tmp = new ListIterator(*this);
-            _Node = _Node->next;
+            _M_node = _M_node->next;
             return *tmp;
         }
         ListIterator operator++() {
-            _Node = _Node->next;
+            _M_node = _M_node->next;
             return *this;
         }
         friend bool operator==(const ListIterator& lhs, const ListIterator& rhs) {
-            return lhs._Node == rhs._Node;
+            return lhs._M_node == rhs._M_node;
         }
         friend bool operator!=(const ListIterator& lhs, const ListIterator& rhs) {
             return !(lhs == rhs);
@@ -41,7 +42,6 @@ class MyList {
             }
             return *ans;
         }
-        ListNode* _Node;
     };
 
 public:
@@ -60,7 +60,6 @@ public:
     void reverse();
     void insert(iterator pos, const T& item);
     void insert(size_t pos, const T& item);
-    void insert(const T& item);
     void remove(const T& value);
     iterator erase(iterator pos);
     iterator erase(iterator first, iterator last);
@@ -78,7 +77,7 @@ protected:
     node* head;
 
 private:
-    void _merge_sort(node*& list);
+    void _M_merge_sort(node*& list);
 };
 
 template <typename T>
@@ -119,11 +118,6 @@ void MyList<T>::push_back(const T& item) {
         ;
     node* new_node = new node(item);
     cur->next = new_node;
-}
-
-template <typename T>
-void MyList<T>::insert(const T& item) {
-    push_back(item);
 }
 
 template <typename T>
@@ -197,11 +191,11 @@ typename MyList<T>::iterator MyList<T>::end() const {
 template <typename T>
 void MyList<T>::insert(iterator pos, const T& item) {
     node *cur, *pre;
-    if (pos._Node == head) {
+    if (pos._M_node == head) {
         head = new node(item, head);
         return;
     }
-    for (pre = head; pre->next != pos._Node; pre = pre->next)
+    for (pre = head; pre->next != pos._M_node; pre = pre->next)
         ;
     cur = pre->next;
     pre->next = new node(item, cur);
@@ -215,14 +209,14 @@ void MyList<T>::insert(size_t pos, const T& item) {
 template <typename T>
 typename MyList<T>::iterator MyList<T>::erase(iterator pos) {
     node *cur, *pre;
-    iterator res(pos._Node->next);
-    if (pos._Node == head) {
+    iterator res(pos._M_node->next);
+    if (pos._M_node == head) {
         node* temp = head;
         head = temp->next;
         delete temp;
         return res;
     }
-    for (pre = head; pre->next != pos._Node; pre = pre->next)
+    for (pre = head; pre->next != pos._M_node; pre = pre->next)
         ;
     cur = pre->next;
     pre->next = cur->next;
@@ -336,11 +330,11 @@ void MyList<T>::insertion_sort() {
 
 template <typename T>
 void MyList<T>::merge_sort() {
-    _merge_sort(head);
+    _M_merge_sort(head);
 }
 
 template <typename T>
-void MyList<T>::_merge_sort(node*& list) {
+void MyList<T>::_M_merge_sort(node*& list) {
     if (list == nullptr || list->next == nullptr) return;
     // divide
     node *mid = list, *sec = list, *pos = list;
@@ -351,8 +345,8 @@ void MyList<T>::_merge_sort(node*& list) {
     }
     mid->next = nullptr;
     // sort
-    _merge_sort(list);
-    _merge_sort(sec);
+    _M_merge_sort(list);
+    _M_merge_sort(sec);
     // merge
     node* cur = new node;
     node* new_head = cur;
