@@ -20,8 +20,8 @@ class MyList {
         ListIterator(const ListIterator& other) { _M_node = other._M_node; }
         T& operator*() const { return _M_node->entry; }
         T* operator->() const { return static_cast<T*>(&(_M_node->entry)); }
-        ListIterator& operator++(int) {
-            ListIterator* tmp = new ListIterator(*this);
+        ListIterator operator++(int) {
+            ListIterator* tmp = *this;
             _M_node = _M_node->next;
             return *tmp;
         }
@@ -36,7 +36,7 @@ class MyList {
             return !(lhs == rhs);
         }
         friend ListIterator& operator+(const ListIterator& lhs, const size_t& rhs) {
-            ListIterator* ans = new ListIterator(lhs);
+            ListIterator* ans = lhs;
             for (size_t i = 0; i < rhs; i++) {
                 (*ans)++;
             }
