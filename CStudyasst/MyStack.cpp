@@ -167,4 +167,4 @@ void stack<T>::heap_sort() {
         _M_insert_heap(tmp, 0, i);
     }
 }
-}
+} // namespace pdli
