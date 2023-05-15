@@ -61,7 +61,6 @@ public:
 private:
     void string_to_vector();
     void vector_to_string();
-    bool greater_eq(std::vector<int> a, std::vector<int> b, int last_dg, int len);
 
 protected:
     std::vector<int> v;
