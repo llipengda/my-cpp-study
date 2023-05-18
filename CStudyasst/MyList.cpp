@@ -21,9 +21,9 @@ class MyList {
         T& operator*() const { return _M_node->entry; }
         T* operator->() const { return static_cast<T*>(&(_M_node->entry)); }
         ListIterator operator++(int) {
-            ListIterator* tmp = *this;
+            ListIterator tmp = *this;
             _M_node = _M_node->next;
-            return *tmp;
+            return tmp;
         }
         ListIterator operator++() {
             _M_node = _M_node->next;
