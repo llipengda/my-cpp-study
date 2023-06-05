@@ -130,33 +130,3 @@ U& hash_map<T, U>::get_value(const T& key) {
 }
 
 } // namespace pdli
-
-#include <iostream>
-int main() {
-    int n, m;
-    std::cin >> n >> m;
-    pdli::hash_map<int, int> mp(n);
-    while (m--) {
-        int key, value;
-        std::cin >> key >> value;
-        try {
-            mp.insert(key, value);
-        } catch (...) {
-            
-        }
-    }
-    int k1, k2;
-    std::cin >> k1 >> k2;
-    try {
-        int v1 = mp.get_value(k1);
-        std::cout << k1 << ' ' << v1 << std::endl;
-    } catch (...) {
-        std::cout << "NULL" << std::endl;
-    }
-    try {
-        int v2 = mp.get_value(k2);
-        std::cout << k2 << ' ' << v2 << std::endl;
-    } catch (...) {
-        std::cout << "NULL" << std::endl;
-    }
-}
