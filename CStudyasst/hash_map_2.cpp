@@ -1,4 +1,3 @@
-#include <iostream>
 #include <stdexcept>
 
 namespace pdli {
@@ -112,14 +111,12 @@ void hash_map<T, U>::insert(const T& key, const U& value) {
 template <typename T, typename U>
 U& hash_map<T, U>::get_value(const T& key) {
     std::size_t pos = hash_fun(key, _size);
-    std::cout << pos << ' ';
     if (table[pos] == key) {
         return table[pos].value;
     } else if (!(table[pos] == empty)) {
         for (std::size_t i = 1, cnt = 0; cnt < (_size + 1) / 2 - 1; i += 2) {
             ++cnt;
             pos = (pos + i) % _size;
-            std::cout << pos << ' ';
             if (table[pos] == empty) break;
             if (table[pos] == key) {
                 return table[pos].value;
