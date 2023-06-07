@@ -11,12 +11,12 @@ class AVL_tree {
         equal_height
     };
     struct AVL_tree_node {
-        T entry;
+        T data;
         balance_factor balance = balance_factor::equal_height;
         AVL_tree_node* left = nullptr;
         AVL_tree_node* right = nullptr;
         AVL_tree_node() = default;
-        AVL_tree_node(const T& item) : entry(item) {}
+        AVL_tree_node(const T& item) : data(item) {}
     };
 
 public:
@@ -28,7 +28,7 @@ public:
         clear();
         std::function<void(node*)> m_insert = [&](node* sub_root) {
             if (sub_root == nullptr) return;
-            insert(sub_root->entry);
+            insert(sub_root->data);
             m_insert(sub_root->left);
             m_insert(sub_root->right);
         };
@@ -50,7 +50,7 @@ public:
         clear();
         std::function<void(node*)> m_insert = [&](node* sub_root) {
             if (sub_root == nullptr) return;
-            insert(sub_root->entry);
+            insert(sub_root->data);
             m_insert(sub_root->left);
             m_insert(sub_root->right);
         };
@@ -104,9 +104,9 @@ private:
         if (sub_root == nullptr) {
             sub_root = new node(item);
             return true;
-        } else if (item == sub_root->entry) {
+        } else if (item == sub_root->data) {
             throw std::runtime_error("duplicate error");
-        } else if (item < sub_root->entry) {
+        } else if (item < sub_root->data) {
             bool is_taller = AVL_insert(sub_root->left, item);
             if (is_taller) {
                 switch (sub_root->balance) {
@@ -263,6 +263,40 @@ private:
         m_clear(sub_root->right);
         delete sub_root;
     }
+
+    /**
+     * @brief Remove an item in a subtree.
+     * @param sub_root the root of the subtree
+     * @param item the item to remove
+     * @return the sub_tree becomes shorter or not
+     */
+    bool AVL_remove(node*& sub_root, const T& item) {
+        if (sub_root == nullptr) {
+            throw std::runtime_error("not found in AVL_remove");
+        } else if (item < sub_root->data) {
+            return AVL_remove(sub_root->left, item);
+        } else if (item > sub_root->data) {
+            return AVL_remove(sub_root->right, item);
+        } else if (sub_root->right == nullptr) {
+            node* temp = sub_root;
+            sub_root = sub_root->left;
+            delete temp;
+            return true;
+        } else if (sub_root->left == nullptr) {
+            node* temp = sub_root;
+            sub_root = sub_root->right;
+            delete temp;
+            return true;
+        } else if (sub_root->balance == balance_factor::left_higher) {
+            node* temp = sub_root->left;
+            while (temp->right != nullptr) {
+                temp = temp->right;
+            }
+            sub_root->data = temp->data;
+            // TODO
+        }
+    }
+
 };
 } // namespace pdli
 
