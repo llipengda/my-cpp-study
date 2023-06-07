@@ -1,5 +1,4 @@
 #include <functional>
-#include <iostream>
 #include <stdexcept>
 
 namespace pdli {
@@ -125,7 +124,6 @@ public:
     T& find(const T& item) {
         node* cur = root;
         while (cur != nullptr && cur->entry != item) {
-            std::cout << cur->entry.key << ' ';
             if (item < cur->entry) {
                 cur = cur->left;
             } else {

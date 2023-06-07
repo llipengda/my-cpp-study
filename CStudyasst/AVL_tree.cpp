@@ -87,7 +87,29 @@ public:
      * @param item the item to remove
      */
     void remove(const T& item) {
+        AVL_remove(root, item);
+    }
 
+    /**
+     * @brief Find an item in the tree.
+     * @param item the item to find
+     * @return the item found in the tree
+     */
+    T& find(const T& item) {
+        node* cur = root;
+        while (cur != nullptr && cur->data != item) {
+            std::cout << cur->data.key << ' ';
+            if (item < cur->data) {
+                cur = cur->left;
+            } else {
+                cur = cur->right;
+            }
+        }
+        if (cur == nullptr) {
+            throw std::runtime_error("not present");
+        } else {
+            return cur->data;
+        }
     }
 
 protected:
@@ -107,42 +129,38 @@ private:
         } else if (item == sub_root->data) {
             throw std::runtime_error("duplicate error");
         } else if (item < sub_root->data) {
-            bool is_taller = AVL_insert(sub_root->left, item);
-            if (is_taller) {
+            bool taller = AVL_insert(sub_root->left, item);
+            if (taller) {
                 switch (sub_root->balance) {
-                    case balance_factor::left_higher:
-                        left_balance(sub_root);
-                        is_taller = false;
-                        break;
-                    case balance_factor::right_higher:
-                        sub_root->balance = balance_factor::equal_height;
-                        is_taller = false;
-                        break;
-                    case balance_factor::equal_height:
-                        sub_root->balance = balance_factor::left_higher;
-                        break;
-                    default:
-                        break;
+                case balance_factor::left_higher:
+                    left_balance(sub_root);
+                    taller = false;
+                    break;
+                case balance_factor::right_higher:
+                    sub_root->balance = balance_factor::equal_height;
+                    taller = false;
+                    break;
+                case balance_factor::equal_height:
+                    sub_root->balance = balance_factor::left_higher;
+                    break;
                 }
             }
-            return is_taller;
+            return taller;
         } else {
             bool is_taller = AVL_insert(sub_root->right, item);
             if (is_taller) {
                 switch (sub_root->balance) {
-                    case balance_factor::left_higher:
-                        sub_root->balance = balance_factor::equal_height;
-                        is_taller = false;
-                        break;
-                    case balance_factor::right_higher:
-                        right_balance(sub_root);
-                        is_taller = false;
-                        break;
-                    case balance_factor::equal_height:
-                        sub_root->balance = balance_factor::right_higher;
-                        break;
-                    default:
-                        break;
+                case balance_factor::left_higher:
+                    sub_root->balance = balance_factor::equal_height;
+                    is_taller = false;
+                    break;
+                case balance_factor::right_higher:
+                    right_balance(sub_root);
+                    is_taller = false;
+                    break;
+                case balance_factor::equal_height:
+                    sub_root->balance = balance_factor::right_higher;
+                    break;
                 }
             }
             return is_taller;
@@ -156,34 +174,34 @@ private:
     void left_balance(node*& sub_root) {
         node*& left_tree = sub_root->left;
         switch (left_tree->balance) {
-            case balance_factor::left_higher: // case L-L
+        case balance_factor::left_higher: // case L-L
+            sub_root->balance = balance_factor::equal_height;
+            left_tree->balance = balance_factor::equal_height;
+            rotate_right(sub_root);
+            break;
+        case balance_factor::equal_height:
+            throw std::runtime_error("impossible case in left_balance");
+            break;
+        case balance_factor::right_higher: // case L-R
+            node* sub_tree = left_tree->right;
+            switch (sub_tree->balance) {
+            case balance_factor::equal_height:
                 sub_root->balance = balance_factor::equal_height;
                 left_tree->balance = balance_factor::equal_height;
-                rotate_right(sub_root);
                 break;
-            case balance_factor::equal_height:
-                throw std::runtime_error("impossible case in left_balance");
+            case balance_factor::left_higher:
+                sub_root->balance = balance_factor::right_higher;
+                left_tree->balance = balance_factor::equal_height;
                 break;
-            case balance_factor::right_higher: // case L-R
-                node* sub_tree = left_tree->right;
-                switch (sub_tree->balance) {
-                    case balance_factor::equal_height:
-                        sub_root->balance = balance_factor::equal_height;
-                        left_tree->balance = balance_factor::equal_height;
-                        break;
-                    case balance_factor::left_higher:
-                        sub_root->balance = balance_factor::right_higher;
-                        left_tree->balance = balance_factor::equal_height;
-                        break;
-                    case balance_factor::right_higher:
-                        sub_root->balance = balance_factor::equal_height;
-                        left_tree->balance = balance_factor::left_higher;
-                        break;
-                }
-                sub_tree->balance = balance_factor::equal_height;
-                rotate_left(left_tree);
-                rotate_right(sub_root);
+            case balance_factor::right_higher:
+                sub_root->balance = balance_factor::equal_height;
+                left_tree->balance = balance_factor::left_higher;
                 break;
+            }
+            sub_tree->balance = balance_factor::equal_height;
+            rotate_left(left_tree);
+            rotate_right(sub_root);
+            break;
         }
     }
 
@@ -194,34 +212,34 @@ private:
     void right_balance(node*& sub_root) {
         node*& right_tree = sub_root->right;
         switch (right_tree->balance) {
-            case balance_factor::right_higher: // case R-R
+        case balance_factor::right_higher: // case R-R
+            sub_root->balance = balance_factor::equal_height;
+            right_tree->balance = balance_factor::equal_height;
+            rotate_left(sub_root);
+            break;
+        case balance_factor::equal_height:
+            throw std::runtime_error("impossible case in right_balance");
+            break;
+        case balance_factor::left_higher: // case R-L
+            node* sub_tree = right_tree->left;
+            switch (sub_tree->balance) {
+            case balance_factor::equal_height:
                 sub_root->balance = balance_factor::equal_height;
                 right_tree->balance = balance_factor::equal_height;
-                rotate_left(sub_root);
                 break;
-            case balance_factor::equal_height:
-                throw std::runtime_error("impossible case in right_balance");
+            case balance_factor::left_higher:
+                sub_root->balance = balance_factor::equal_height;
+                right_tree->balance = balance_factor::right_higher;
                 break;
-            case balance_factor::left_higher: // case R-L
-                node* sub_tree = right_tree->left;
-                switch (sub_tree->balance) {
-                    case balance_factor::equal_height:
-                        sub_root->balance = balance_factor::equal_height;
-                        right_tree->balance = balance_factor::equal_height;
-                        break;
-                    case balance_factor::left_higher:
-                        sub_root->balance = balance_factor::equal_height;
-                        right_tree->balance = balance_factor::right_higher;
-                        break;
-                    case balance_factor::right_higher:
-                        sub_root->balance = balance_factor::left_higher;
-                        right_tree->balance = balance_factor::equal_height;
-                        break;
-                }
-                sub_tree->balance = balance_factor::equal_height;
-                rotate_right(right_tree);
-                rotate_left(sub_root);
+            case balance_factor::right_higher:
+                sub_root->balance = balance_factor::left_higher;
+                right_tree->balance = balance_factor::equal_height;
                 break;
+            }
+            sub_tree->balance = balance_factor::equal_height;
+            rotate_right(right_tree);
+            rotate_left(sub_root);
+            break;
         }
     }
 
@@ -274,9 +292,9 @@ private:
         if (sub_root == nullptr) {
             throw std::runtime_error("not found in AVL_remove");
         } else if (item < sub_root->data) {
-            return AVL_remove(sub_root->left, item);
+            return remove_left(sub_root, item);
         } else if (item > sub_root->data) {
-            return AVL_remove(sub_root->right, item);
+            return remove_right(sub_root, item);
         } else if (sub_root->right == nullptr) {
             node* temp = sub_root;
             sub_root = sub_root->left;
@@ -293,10 +311,128 @@ private:
                 temp = temp->right;
             }
             sub_root->data = temp->data;
-            // TODO
+            return remove_left(sub_root, temp->data);
+        } else {
+            node* temp = sub_root->right;
+            while (temp->left != nullptr) {
+                temp = temp->left;
+            }
+            sub_root->data = temp->data;
+            return remove_right(sub_root, temp->data);
         }
     }
 
+    /**
+     * @brief Remove an item from a left subtree.
+     * @param sub_root the root of the left subtree
+     * @param item the item to remove
+     * @return the subtree becomes shorter or not
+     */
+    bool remove_left(node*& sub_root, const T& item) {
+        bool shorter = AVL_remove(sub_root->left, item);
+        if (shorter) {
+            switch (sub_root->balance) {
+            case balance_factor::left_higher:
+                sub_root->balance = balance_factor::equal_height;
+                break;
+            case balance_factor::equal_height:
+                sub_root->balance = balance_factor::right_higher;
+                shorter = false;
+                break;
+            case balance_factor::right_higher:
+                node* temp = sub_root->right;
+                switch (temp->balance) {
+                case balance_factor::equal_height:
+                    temp->balance = balance_factor::left_higher;
+                    rotate_left(sub_root);
+                    shorter = false;
+                    break;
+                case balance_factor::right_higher:
+                    sub_root->balance = balance_factor::equal_height;
+                    temp->balance = balance_factor::equal_height;
+                    rotate_left(sub_root);
+                    break;
+                case balance_factor::left_higher:
+                    node* temp_left = temp->left;
+                    switch (temp_left->balance) {
+                    case balance_factor::equal_height:
+                        sub_root->balance = balance_factor::equal_height;
+                        temp->balance = balance_factor::equal_height;
+                        break;
+                    case balance_factor::right_higher:
+                        sub_root->balance = balance_factor::left_higher;
+                        temp->balance = balance_factor::equal_height;
+                        break;
+                    case balance_factor::left_higher:
+                        sub_root->balance = balance_factor::equal_height;
+                        temp->balance = balance_factor::right_higher;
+                        break;
+                    }
+                    temp_left->balance = balance_factor::equal_height;
+                    rotate_right(sub_root->right);
+                    rotate_left(sub_root);
+                    break;
+                }
+            }
+        }
+        return shorter;
+    }
+
+    /**
+     * @brief Remove an item from a right subtree.
+     * @param sub_root the root of the right subtree
+     * @param item the item to remove
+     * @return the subtree becomes shorter or not
+     */
+    bool remove_right(node*& sub_root, const T& item) {
+        bool shorter = AVL_remove(sub_root->right, item);
+        if (shorter) {
+            switch (sub_root->balance) {
+            case balance_factor::right_higher:
+                sub_root->balance = balance_factor::equal_height;
+                break;
+            case balance_factor::equal_height:
+                sub_root->balance = balance_factor::left_higher;
+                shorter = false;
+                break;
+            case balance_factor::left_higher:
+                node* temp = sub_root->left;
+                switch (temp->balance) {
+                case balance_factor::equal_height:
+                    temp->balance = balance_factor::right_higher;
+                    rotate_right(sub_root);
+                    shorter = false;
+                    break;
+                case balance_factor::left_higher:
+                    sub_root->balance = balance_factor::equal_height;
+                    temp->balance = balance_factor::equal_height;
+                    rotate_right(sub_root);
+                    break;
+                case balance_factor::right_higher:
+                    node* temp_right = temp->right;
+                    switch (temp_right->balance) {
+                    case balance_factor::equal_height:
+                        sub_root->balance = balance_factor::equal_height;
+                        temp->balance = balance_factor::equal_height;
+                        break;
+                    case balance_factor::left_higher:
+                        sub_root->balance = balance_factor::right_higher;
+                        temp->balance = balance_factor::equal_height;
+                        break;
+                    case balance_factor::right_higher:
+                        sub_root->balance = balance_factor::equal_height;
+                        temp->balance = balance_factor::left_higher;
+                        break;
+                    }
+                    temp_right->balance = balance_factor::equal_height;
+                    rotate_left(sub_root->left);
+                    rotate_right(sub_root);
+                    break;
+                }
+            }
+        }
+        return shorter;
+    }
 };
 } // namespace pdli
 
@@ -315,6 +451,9 @@ struct record {
     bool operator<(const record& other) const {
         return key < other.key;
     }
+    bool operator>(const record& other) const {
+        return key > other.key;
+    }
 };
 
 int main() {
@@ -325,6 +464,22 @@ int main() {
         std::string key, value;
         std::cin >> key >> value;
         avlt.insert({key, value});
+    }
+    std::cin >> n;
+    while (n--) {
+        std::string key;
+        std::cin >> key;
+        avlt.remove(key);
+    }
+    for (int i = 0; i < 2; i++) {
+        std::string key;
+        std::cin >> key;
+        try {
+            auto ans = avlt.find(key);
+            std::cout << ans.key << ' ' << ans.value << std::endl;
+        } catch (...) {
+            std::cout << "NULL" << std::endl;
+        }
     }
     return 0;
 }
