@@ -1,5 +1,4 @@
 #include <functional>
-#include <iostream>
 #include <stdexcept>
 
 namespace pdli {
@@ -93,12 +92,11 @@ public:
     /**
      * @brief Find an item in the tree.
      * @param item the item to find
-     * @return the item found in the tree
+     * @return reference of the item found in the tree
      */
     T& find(const T& item) {
         node* cur = root;
         while (cur != nullptr && cur->data != item) {
-            std::cout << cur->data.key << ' ';
             if (item < cur->data) {
                 cur = cur->left;
             } else {
@@ -305,7 +303,13 @@ private:
             sub_root = sub_root->right;
             delete temp;
             return true;
-        } else if (sub_root->balance == balance_factor::left_higher) {
+        } else if (sub_root->balance == balance_factor::right_higher) {
+            // another solution
+            // node* temp = sub_root->right;
+            // while (temp->left != nullptr) {
+            //     temp = temp->left;
+            // }
+            // return remove_right(sub_root, temp->data);
             node* temp = sub_root->left;
             while (temp->right != nullptr) {
                 temp = temp->right;
@@ -313,12 +317,12 @@ private:
             sub_root->data = temp->data;
             return remove_left(sub_root, temp->data);
         } else {
-            node* temp = sub_root->right;
-            while (temp->left != nullptr) {
-                temp = temp->left;
+            node* temp = sub_root->left;
+            while (temp->right != nullptr) {
+                temp = temp->right;
             }
             sub_root->data = temp->data;
-            return remove_right(sub_root, temp->data);
+            return remove_left(sub_root, temp->data);
         }
     }
 
@@ -455,31 +459,3 @@ struct record {
         return key > other.key;
     }
 };
-
-int main() {
-    pdli::AVL_tree<record<std::string, std::string>> avlt;
-    int n;
-    std::cin >> n;
-    while (n--) {
-        std::string key, value;
-        std::cin >> key >> value;
-        avlt.insert({key, value});
-    }
-    std::cin >> n;
-    while (n--) {
-        std::string key;
-        std::cin >> key;
-        avlt.remove(key);
-    }
-    for (int i = 0; i < 2; i++) {
-        std::string key;
-        std::cin >> key;
-        try {
-            auto ans = avlt.find(key);
-            std::cout << ans.key << ' ' << ans.value << std::endl;
-        } catch (...) {
-            std::cout << "NULL" << std::endl;
-        }
-    }
-    return 0;
-}
