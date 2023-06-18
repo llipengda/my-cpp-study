@@ -110,6 +110,48 @@ public:
         }
     }
 
+    /**
+     * @brief Inorder traverse the tree.
+     * @param fun the function used for traversal
+     */
+    void in_order(const std::function<void(T&)>& fun) {
+        std::function<void(node*, std::function<void(T&)>)> _inorder = [&](node* root, std::function<void(T&)> fun) {
+            if (root == nullptr) return;
+            _inorder(root->left, fun);
+            fun(root->data);
+            _inorder(root->right, fun);
+        };
+        _inorder(root, fun);
+    }
+
+    /**
+     * @brief Preorder traverse the tree.
+     * @param fun the function used for traversal
+     */
+    void pre_order(const std::function<void(T&)>& fun) {
+        std::function<void(node*, std::function<void(T&)>)> _preorder = [&](node* root, std::function<void(T&)> fun) {
+            if (root == nullptr) return;
+            fun(root->data);
+            _preorder(root->left, fun);
+            _preorder(root->right, fun);
+        };
+        _preorder(root, fun);
+    }
+
+    /**
+     * @brief Postorder traverse the tree.
+     * @param fun the function used for traversal
+     */
+    void post_order(const std::function<void(T&)>& fun) {
+        std::function<void(node*, std::function<void(T&)>)> _postorder = [&](node* root, std::function<void(T&)> fun) {
+            if (root == nullptr) return;
+            _postorder(root->left, fun);
+            _postorder(root->right, fun);
+            fun(root->data);
+        };
+        _postorder(root, fun);
+    }
+
 protected:
     node* root = nullptr;
 

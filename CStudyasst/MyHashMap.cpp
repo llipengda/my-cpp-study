@@ -85,6 +85,7 @@ private:
 
 template <typename T>
 list<T>::list(const list& other) {
+    if (other.head == nullptr) return;
     node *cur, *pre;
     node* _head = other.head;
     cur = new node(other.head->entry);
@@ -394,85 +395,10 @@ void list<T>::_M_merge_sort(node*& list) {
 template <typename T, typename U>
 class hash_map {
     struct hash_map_record {
+        T key;
+        U value = U();
         hash_map_record(const T& key) : key(key){};
         hash_map_record(const T& key, const U& value) : key(key), value(value){};
-        T key;
-        U value;
-        bool operator==(const hash_map_record& other) const {
-            return key == other.key;
-        }
-    };
-    struct hash_map_iterator {
-        list<hash_map_record>* _M_node;
-        typename list<hash_map_record>::iterator _M_list_iterator;
-        hash_map_iterator() = default;
-        hash_map_iterator(list<hash_map_record>* node, const typename list<hash_map_record>::iterator& it) : _M_node(node), _M_list_iterator(it){};
-        hash_map_iterator operator++(int) {
-            hash_map_iterator tmp = *this;
-            do {
-                if (_M_list_iterator != _M_node->end()) {
-                    ++_M_list_iterator;
-                } else {
-                    ++_M_node;
-                    _M_list_iterator = _M_node->begin();
-                }
-            } while (_M_list_iterator == nullptr);
-            return tmp;
-        }
-        hash_map_iterator& operator++() {
-            do {
-                if (_M_list_iterator != _M_node->end()) {
-                    ++_M_list_iterator;
-                } else {
-                    ++_M_node;
-                    _M_list_iterator = _M_node->begin();
-                }
-            } while (_M_list_iterator == nullptr);
-            return *this;
-        }
-        bool operator==(const hash_map_iterator& other) {
-            return _M_node == other._M_node && _M_list_iterator == _M_list_iterator;
-        }
-        bool operator!=(const hash_map_iterator& other) {
-            return !(*this == other);
-        }
-        hash_map_record& operator*() noexcept {
-            return *_M_list_iterator;
-        }
-    };
-
-public:
-    typedef hash_map_record record;
-    typedef hash_map_iterator iterator;
-    static const size_t npos = static_cast<size_t>(-1);
-    hash_map();
-    hash_map(size_t n);
-    hash_map(const hash_map& other);
-    ~hash_map();
-    hash_map& operator=(const hash_map& other);
-    void insert(const T& key, const U& value);
-    U& operator[](const T& key) const;
-    size_t get_position(const T& key) const;
-    U& get_value(const T& key) const;
-    iterator get_iterator(const T& key) const;
-    void remove(const T& key);
-    static size_t _hash_fun(const T& key, const size_t& size);
-    iterator begin() const;
-    iterator end() const;
-
-protected:
-    size_t hash_size = 100;
-    list<record>* table;
-};
-
-template <typename U>
-class hash_map<std::string, U> {
-    using T = std::string;
-    struct hash_map_record {
-        hash_map_record(const T& key) : key(key){};
-        hash_map_record(const T& key, const U& value) : key(key), value(value){};
-        T key;
-        U value;
         bool operator==(const hash_map_record& other) const {
             return key == other.key;
         }
@@ -648,19 +574,11 @@ size_t hash_map<T, U>::_hash_fun(const T& key, const size_t& size) {
     unsigned seed = 31;
     unsigned hash = 0;
     T tmp = key;
-    while (tmp) {
-        hash = (hash * seed + tmp) % size;
-        tmp /= 2;
-    }
-    return hash % size;
-}
-
-template <typename U>
-size_t hash_map<std::string, U>::_hash_fun(const T& key, const size_t& size) {
-    unsigned seed = 31;
-    unsigned hash = 0;
-    for (const auto& i : key) {
-        hash = (hash * seed + i) % size;
+    if (std::is_same<T, std::string>::value) {
+        for (const auto& i : key) {
+            hash = (hash * seed + i) % size;
+        }
+        return hash % size;
     }
     return hash % size;
 }

@@ -5,7 +5,7 @@ namespace pdli {
 template <typename T>
 class stack {
 public:
-    typedef T* iterator;
+    using iterator = T*;
     stack();
     stack(size_t size);
     stack(const stack& other);
@@ -54,6 +54,25 @@ stack<T>::~stack() noexcept {
 }
 
 template <typename T>
+stack<T>::stack(const stack& other) {
+    clear();
+    _size = other._size;
+    count = other.count;
+    entry = new T[other._size + 1];
+    memcpy(other.entry, entry, _size + 1);
+}
+
+template <typename T>
+stack<T>& stack<T>::operator=(const stack<T>& other) {
+    if (this == &other) return;
+    clear();
+    _size = other._size;
+    count = other.count;
+    entry = new T[other._size + 1];
+    memcpy(other.entry, entry, _size + 1);
+}
+
+template <typename T>
 void stack<T>::pop() {
     if (count == 0) throw std::underflow_error("underflow");
     count--;
@@ -80,6 +99,7 @@ bool stack<T>::empty() const {
 
 template <typename T>
 void stack<T>::clear() {
+    delete[] entry;
     count = 0;
 }
 
@@ -115,7 +135,7 @@ void stack<T>::_M_quick_sort(int l, int r) {
     if (l >= r) return;
     std::swap(entry[l], entry[r - 1]);
     int pos = l;
-    int pivot = entry[l];
+    auto pivot = entry[l];
     for (int i = l + 1; i < r; i++) {
         if (entry[i] < pivot) {
             pos++;

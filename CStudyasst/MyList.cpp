@@ -82,6 +82,7 @@ private:
 
 template <typename T>
 MyList<T>::MyList(const MyList& other) {
+    if (other.head == nullptr) return;
     node *cur, *pre;
     node* _head = other.head;
     cur = new node(other.head->entry);
