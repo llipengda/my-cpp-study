@@ -4,9 +4,9 @@
 #define REP(i, a, b) for (int i = a; i <= b; i++)
 #define PER(i, a, b) for (int i = a; i >= b; i--)
 using namespace std;
-typedef long long ll;
-typedef double db;
-typedef pair<int, int> pii;
+using ll = long long;
+using db = double;
+using pii = pair<int, int>;
 void solve() {
     
 }
