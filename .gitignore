@@ -5,3 +5,4 @@ compare/
 in.txt
 out.txt
 .clang-*
+in/
