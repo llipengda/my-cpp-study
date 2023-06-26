@@ -77,7 +77,7 @@ public:
     void merge_sort();
 
 protected:
-    node* head;
+    node* head = nullptr;
 
 private:
     void _M_merge_sort(node*& list);
