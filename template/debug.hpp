@@ -130,7 +130,7 @@ auto str(T&& x) {
 
 template <typename T>
 auto debug_(T&& x, const std::string& name) {
-    std::cout << name << " = " << str(x) << '\n';
+    std::cerr << name << " = " << str(x) << '\n';
     return x;
 }
 
