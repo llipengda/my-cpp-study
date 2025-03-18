@@ -6,6 +6,7 @@
 #include <iostream>
 #include <sstream>
 #define debug(...) debug_(__VA_ARGS__, #__VA_ARGS__)
+#define debug_out(...) debug_(__VA_ARGS__, #__VA_ARGS__, std::cout)
 #define MAX_LEN 20
 
 template <typename T>
@@ -129,8 +130,8 @@ auto str(T&& x) {
 }
 
 template <typename T>
-auto debug_(T&& x, const std::string& name) {
-    std::cerr << name << " = " << str(x) << '\n';
+auto debug_(T&& x, const std::string& name, std::ostream& out = std::cerr) {
+    out << name << " = " << str(x) << '\n';
     return x;
 }
 
