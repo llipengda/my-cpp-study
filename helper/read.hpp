@@ -6,6 +6,19 @@
 #include <iostream>
 #include <vector>
 
+template <class T>
+auto read(T&& t) {
+    std::cin >> t;
+}
+
+template <class T>
+auto read(std::vector<T>& v) {
+    T tmp;
+    while (std::cin >> tmp) {
+        v.push_back(tmp);
+    }
+}
+
 template <class T = int>
 auto read_v() {
     int n;
@@ -29,7 +42,7 @@ auto read_v_unknown() {
 
 template <class... Args>
 void read(Args&&... args) {
-    ((std::cin >> args), ...);
+    ((read(args)), ...);
 }
 
 #endif

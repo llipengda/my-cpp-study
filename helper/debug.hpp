@@ -1,10 +1,15 @@
 #pragma once
+#include <utility>
 #ifndef DEBUG_HPP
 #define DEBUG_HPP
 
 #include <cstddef>
+#include <initializer_list>
 #include <iostream>
+#include <regex>
 #include <sstream>
+#include <vector>
+
 #define debug(...) debug_(__VA_ARGS__, #__VA_ARGS__)
 #define debug_out(...) debug_(__VA_ARGS__, #__VA_ARGS__, std::cout)
 #define MAX_LEN 20
@@ -131,8 +136,53 @@ auto str(T&& x) {
 
 template <typename T>
 auto debug_(T&& x, const std::string& name, std::ostream& out = std::cerr) {
+#ifndef ONLINE_JUDGE
     out << name << " = " << str(x) << '\n';
+#endif
     return x;
+}
+
+template <typename T>
+auto debug_(const std::initializer_list<T>& xs, const std::string& name, std::ostream& out = std::cerr) {
+#ifndef ONLINE_JUDGE
+    out << name << " = {";
+    for (auto it = xs.begin(); it != xs.end(); it++) {
+        out << str(*it);
+        if (it != xs.end() - 1) {
+            out << ", ";
+        } else {
+            out << "}\n";
+        }
+    }
+#endif
+    return xs;
+}
+
+inline std::vector<std::string> split(const std::string& s, const std::string& delimiter) {
+    std::vector<std::string> tokens;
+    std::regex regex_delim(delimiter);
+    std::sregex_token_iterator it(s.begin(), s.end(), regex_delim, -1);
+    std::sregex_token_iterator end;
+    while (it != end) {
+        tokens.push_back(*it++);
+    }
+    return tokens;
+}
+
+template <typename Tuple, std::size_t... Is>
+void tuple_helper(const std::vector<std::string>& names, const Tuple& tup, std::index_sequence<Is...>) {
+    int i{};
+    ((std::cerr << names[i++] << " = " << str(std::get<Is>(tup)) << '\n'), ...);
+}
+
+template <typename... Args>
+auto debug_(Args&&... args) {
+#ifndef ONLINE_JUDGE
+    auto t = std::forward_as_tuple(std::forward<Args>(args)...);
+    constexpr auto N = sizeof...(Args);
+    auto names = split(std::get<N - 1>(t), ",\\s+");
+    tuple_helper(names, t, std::make_index_sequence<N - 1>{});
+#endif
 }
 
 #endif // DEBUG_HPP
