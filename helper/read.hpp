@@ -27,7 +27,20 @@ auto read_v() {
     for (int i = 0; i < n; i++) {
         std::cin >> v[i];
     }
-    return v;
+    return std::move(v);
+}
+
+template <class T = int>
+auto read_v2() {
+    int m, n;
+    std::cin >> m >> n;
+    std::vector<std::vector<T>> v(m, std::vector<T>(n));
+    for (int i = 0; i < m; i++) {
+        for (int j = 0; j < n; j++) {
+            std::cin >> v[i][j];
+        }
+    }
+    return std::move(v);
 }
 
 template <class T = int>

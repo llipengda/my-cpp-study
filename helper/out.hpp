@@ -15,7 +15,8 @@ auto out(std::vector<T> v) {
     auto n = v.size();
     std::cout << '[';
     for (int i = 0; i < n; i++) {
-        std::cout << v[i] << ",]"[i == n - 1];
+        out(v[i]);
+        std::cout << ",]"[i == n - 1];
     }
 }
 

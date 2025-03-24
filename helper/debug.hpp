@@ -1,5 +1,4 @@
 #pragma once
-#include <utility>
 #ifndef DEBUG_HPP
 #define DEBUG_HPP
 
@@ -8,11 +7,40 @@
 #include <iostream>
 #include <regex>
 #include <sstream>
+#include <string>
+#include <type_traits>
+#include <utility>
 #include <vector>
 
 #define debug(...) debug_(__VA_ARGS__, #__VA_ARGS__)
 #define debug_out(...) debug_(__VA_ARGS__, #__VA_ARGS__, std::cout)
 #define MAX_LEN 20
+
+template <typename T>
+struct can_to_string {
+private:
+    template <typename U>
+    static auto test(int) -> decltype(std::to_string(std::declval<U>()), std::true_type());
+
+    template <typename>
+    static std::false_type test(...);
+
+public:
+    static constexpr bool value = decltype(test<T>(0))::value;
+};
+
+template <typename T>
+struct has_to_string {
+private:
+    template <typename U>
+    static auto test(int) -> decltype(std::declval<U>().to_string(), std::true_type());
+
+    template <typename>
+    static std::false_type test(...);
+
+public:
+    static constexpr bool value = decltype(test<T>(0))::value;
+};
 
 template <typename T>
 struct has_size {
@@ -66,19 +94,35 @@ public:
     static constexpr bool value = decltype(test<T>(0))::value;
 };
 
-template <typename T, typename std::enable_if<is_ostreamable<T>::value, int>::type = 0>
+template <typename T, typename std::enable_if<can_to_string<T>::value, int>::type = 0>
+auto str(T&& x);
+
+template <typename T, typename std::enable_if<has_to_string<T>::value && !can_to_string<T>::value, int>::type = 0>
+auto str(T&& x);
+
+template <typename T, typename std::enable_if<is_ostreamable<T>::value && !can_to_string<T>::value && !has_to_string<T>::value, int>::type = 0>
 auto str(T&& x);
 
 template <typename T>
 auto str(T&& x, std::size_t len, std::size_t max_len);
 
-template <typename T, std::size_t ML = MAX_LEN, typename std::enable_if<has_size<T>::value && has_subscript<T>::value && !is_ostreamable<T>::value, int>::type = 0>
+template <typename T, std::size_t ML = MAX_LEN, typename std::enable_if<has_size<T>::value && has_subscript<T>::value && !is_ostreamable<T>::value && !can_to_string<T>::value && !has_to_string<T>::value, int>::type = 0>
 auto str(T&& x);
 
-template <typename T, std::size_t ML = MAX_LEN, typename std::enable_if<has_iterator<T>::value && !(has_size<T>::value && has_subscript<T>::value) && !is_ostreamable<T>::value, int>::type = 0>
+template <typename T, std::size_t ML = MAX_LEN, typename std::enable_if<has_iterator<T>::value && !(has_size<T>::value && has_subscript<T>::value) && !is_ostreamable<T>::value && !can_to_string<T>::value && !has_to_string<T>::value, int>::type = 0>
 auto str(T&& x);
 
-template <typename T, typename std::enable_if<is_ostreamable<T>::value, int>::type>
+template <typename T, typename std::enable_if<can_to_string<T>::value, int>::type>
+auto str(T&& x) {
+    return std::to_string(x);
+}
+
+template <typename T, typename std::enable_if<has_to_string<T>::value && !can_to_string<T>::value, int>::type>
+auto str(T&& x) {
+    return x.to_string();
+}
+
+template <typename T, typename std::enable_if<is_ostreamable<T>::value && !can_to_string<T>::value && !has_to_string<T>::value, int>::type>
 auto str(T&& x) {
     return x;
 }
@@ -88,16 +132,16 @@ auto str(T&& x, std::size_t len, std::size_t max_len) {
     std::ostringstream oss;
     oss << '[';
     if (len <= max_len) {
-        std::string end[]{", ", "]"};
+        std::string end[]{",", "]"};
         for (std::size_t i = 0; i < len; i++) {
             oss << str(x[i]) << end[i == len - 1];
         }
     } else {
-        std::string end[]{", ", ", ..., "};
+        std::string end[]{",", ",...,"};
         for (std::size_t i = 0; i < max_len - 2; i++) {
             oss << str(x[i]) << end[i == max_len - 2 - 1];
         }
-        std::string end2[]{", ", "]"};
+        std::string end2[]{",", "]"};
         for (std::size_t i = len - 2; i < len; i++) {
             oss << str(x[i]) << end2[i == len - 1];
         }
@@ -108,12 +152,12 @@ auto str(T&& x, std::size_t len, std::size_t max_len) {
     return oss.str();
 }
 
-template <typename T, std::size_t ML, typename std::enable_if<has_size<T>::value && has_subscript<T>::value && !is_ostreamable<T>::value, int>::type>
+template <typename T, std::size_t ML, typename std::enable_if<has_size<T>::value && has_subscript<T>::value && !is_ostreamable<T>::value && !can_to_string<T>::value && !has_to_string<T>::value, int>::type>
 auto str(T&& x) {
     return str(x, x.size(), ML);
 }
 
-template <typename T, std::size_t ML, typename std::enable_if<has_iterator<T>::value && !(has_size<T>::value && has_subscript<T>::value) && !is_ostreamable<T>::value, int>::type>
+template <typename T, std::size_t ML, typename std::enable_if<has_iterator<T>::value && !(has_size<T>::value && has_subscript<T>::value) && !is_ostreamable<T>::value && !can_to_string<T>::value && !has_to_string<T>::value, int>::type>
 auto str(T&& x) {
     std::ostringstream oss;
     oss << '[';
@@ -149,7 +193,7 @@ auto debug_(const std::initializer_list<T>& xs, const std::string& name, std::os
     for (auto it = xs.begin(); it != xs.end(); it++) {
         out << str(*it);
         if (it != xs.end() - 1) {
-            out << ", ";
+            out << ",";
         } else {
             out << "}\n";
         }

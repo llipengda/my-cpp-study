@@ -9,5 +9,6 @@
 #include <bits/stdc++.h> // IWYU pragma: export
 
 using std::vector;
+using std::string;
 
 #endif
