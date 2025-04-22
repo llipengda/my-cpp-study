@@ -1,5 +1,5 @@
 #define SHOW_DEBUG
-#include "regex/dfa.hpp"
+#include "regex/regex.hpp"
 
 int main() {
     std::string regex;
@@ -8,6 +8,6 @@ int main() {
     std::string str;
     std::cin >> str;
 
-    regex::dfa d(regex);
-    std::cout << "Match: " << (d.match(str) ? "true" : "false") << std::endl;
+    regex::regex r(regex);
+    std::cout << "Match: " << (r.match(str) ? "true" : "false") << std::endl;
 }

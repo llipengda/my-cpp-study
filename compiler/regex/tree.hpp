@@ -214,8 +214,7 @@ private:
         std::cout << std::string(indent, ' ');
         if (node->type == regex_node::type::ch) {
             auto& char_node = node->as<regex::char_node>();
-            ::regex::print(char_node.value);
-            std::cout << '(' << char_node.number << ')' << std::endl;
+            std::cout << char_node.value << '(' << char_node.number << ')' << std::endl;
         } else if (node->type == regex_node::type::concat) {
             std::cout << op_map.at(op::concat) << std::endl;
             print(node->as<regex::concat_node>().left, indent + 2);

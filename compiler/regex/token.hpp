@@ -17,7 +17,8 @@ namespace regex {
 enum class symbol {
     end_mark,
     number,
-    word
+    word,
+    white_space,
 };
 
 enum class op {
@@ -32,7 +33,8 @@ enum class op {
 const std::unordered_map<symbol, std::string> symbol_map = {
     {symbol::end_mark, "#"},
     {symbol::number, "\\d"},
-    {symbol::word, "\\w"}};
+    {symbol::word, "\\w"},
+    {symbol::white_space, "\\s"}};
 
 const std::unordered_map<op, std::string> op_map = {
     {op::concat, "·"},
@@ -42,7 +44,9 @@ const std::unordered_map<op, std::string> op_map = {
     {op::right_par, ")"},
     {op::blackslash, "\\"}};
 
-using token_type = std::variant<symbol, op, char>;
+enum class nothing {};
+
+using token_type = std::variant<nothing, symbol, op, char>;
 
 static int get_precedence(op opr) {
     switch (opr) {
@@ -99,6 +103,8 @@ static bool match(char c, token_type ch) {
             return std::isdigit(c);
         case symbol::word:
             return std::isalnum(c) || c == '_';
+        case symbol::white_space:
+            return std::isspace(c);
         }
     }
     return false;
@@ -113,6 +119,9 @@ static const std::vector<token_type> get_possible_token(const char c) {
     if (std::isdigit(c)) {
         result.push_back(symbol::number);
     }
+    if (std::isspace(c)) {
+        result.push_back(symbol::white_space);
+    }
     return result;
 }
 
@@ -126,11 +135,11 @@ static bool is_nonop(token_type ch) {
 
 static std::vector<token_type> split(const std::string& s) {
     std::vector<token_type> result;
-    token_type last{};
+    token_type last = nothing{};
     for (const char& ch : s) {
         // add concat operator
-        if (is_char(last) || is(last, op::right_par) || is(last, op::star)) {
-            if (is_nonop(ch) || ch == '(') {
+        if (is_char(last) || is_symbol(last) || is(last, op::right_par) || is(last, op::star)) {
+            if (is_nonop(ch) || ch == '(' || ch == '\\') {
                 result.push_back(op::concat);
             }
         }
@@ -142,6 +151,24 @@ static std::vector<token_type> split(const std::string& s) {
                 last = symbol::word;
             } else if (ch == 'd') {
                 last = symbol::number;
+            } else if (ch == 's') {
+                last = symbol::white_space;
+            } else if (ch == '0') {
+                last = '\0';
+            } else if (ch == 'a') {
+                last = '\a';
+            } else if (ch == 'b') {
+                last = '\b';
+            } else if (ch == 'v') {
+                last = '\v';
+            } else if (ch == 'n') {
+                last = '\n';
+            } else if (ch == 't') {
+                last = '\t';
+            } else if (ch == 'r') {
+                last = '\r';
+            } else if (ch == 'f') {
+                last = '\f';
             } else {
                 throw regex::unknown_character_exception(std::string{'\\', ch});
             }
@@ -216,19 +243,26 @@ static std::vector<token_type> to_postfix(const std::vector<token_type>& v) {
     return res;
 }
 
-static void print(token_type ch) {
-    if (is_char(ch)) {
-        std::cout << std::get<char>(ch);
-    } else if (is_op(ch)) {
-        std::cout << op_map.at(std::get<op>(ch));
-    } else if (is_symbol(ch)) {
-        std::cout << symbol_map.at(std::get<symbol>(ch));
-    }
-}
+const std::unordered_map<char, std::string> escape_map = {
+    {'\0', "\\0"},
+    {'\a', "\\a"},
+    {'\b', "\\b"},
+    {'\v', "\\v"},
+    {'\n', "\\n"},
+    {'\t', "\\t"},
+    {'\r', "\\r"},
+    {'\f', "\\f"}};
 
 inline std::ostream& operator<<(std::ostream& os, const token_type& ch) {
     if (is_char(ch)) {
-        os << std::get<char>(ch);
+        char c = std::get<char>(ch);
+        if (escape_map.find(c) != escape_map.end()) {
+            os << escape_map.at(c);
+        } else if (std::isprint(c)) {
+            os << c;
+        } else {
+            os << '\\' << static_cast<int>(c);
+        }
     } else if (is_op(ch)) {
         os << op_map.at(std::get<op>(ch));
     } else if (is_symbol(ch)) {
