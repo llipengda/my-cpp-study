@@ -23,7 +23,8 @@ public:
         ch,
         concat,
         alt,
-        star
+        star,
+        plus,
     };
 
     using node_ptr_t = std::shared_ptr<regex_node>;
@@ -83,6 +84,17 @@ public:
     }
 };
 
+class plus_node : public regex_node {
+public:
+    node_ptr_t child;
+    explicit plus_node(node_ptr_t child) : child(child) {
+        type = type::plus;
+        nullable = child->nullable;
+        firstpos = child->firstpos;
+        lastpos = child->lastpos;
+    }
+};
+
 class alt_node : public regex_node {
 public:
     node_ptr_t left, right;
@@ -128,6 +140,13 @@ public:
                 auto operand = st.top();
                 st.pop();
                 st.push(std::make_shared<star_node>(star_node{operand}));
+            } else if (is(ch, op::plus)) {
+                if (st.empty()) {
+                    throw regex::invalid_regex_exception("'+' operator with empty stack");
+                }
+                auto operand = st.top();
+                st.pop();
+                st.push(std::make_shared<plus_node>(plus_node{operand}));
             } else if (is(ch, op::concat)) {
                 if (st.size() < 2) {
                     throw regex::invalid_regex_exception("'·' operator with fewer than 2 operands");
@@ -172,6 +191,11 @@ public:
                 for (auto i : star_node.lastpos) {
                     followpos[i].insert(star_node.firstpos.begin(), star_node.firstpos.end());
                 }
+            } else if (node.type == regex_node::type::plus) {
+                auto& plus_node = node.as<regex::plus_node>();
+                for (auto i : plus_node.lastpos) {
+                    followpos[i].insert(plus_node.firstpos.begin(), plus_node.firstpos.end());
+                }
             }
         });
     }
@@ -204,6 +228,9 @@ private:
         } else if (node->type == regex_node::type::star) {
             auto& star_node = node->as<regex::star_node>();
             visit(star_node.child, func);
+        } else if (node->type == regex_node::type::plus) {
+            auto& plus_node = node->as<regex::plus_node>();
+            visit(plus_node.child, func);
         }
     }
 
@@ -226,6 +253,9 @@ private:
         } else if (node->type == regex_node::type::star) {
             std::cout << op_map.at(op::star) << std::endl;
             print(node->as<regex::star_node>().child, indent + 2);
+        } else if (node->type == regex_node::type::plus) {
+            std::cout << op_map.at(op::plus) << std::endl;
+            print(node->as<regex::plus_node>().child, indent + 2);
         }
     }
 };

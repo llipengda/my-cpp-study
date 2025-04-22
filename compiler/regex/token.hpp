@@ -25,6 +25,7 @@ enum class op {
     concat,
     alt,
     star,
+    plus,
     left_par,
     right_par,
     blackslash
@@ -40,6 +41,7 @@ const std::unordered_map<op, std::string> op_map = {
     {op::concat, "·"},
     {op::alt, "|"},
     {op::star, "*"},
+    {op::plus, "+"},
     {op::left_par, "("},
     {op::right_par, ")"},
     {op::blackslash, "\\"}};
@@ -51,6 +53,7 @@ using token_type = std::variant<nothing, symbol, op, char>;
 static int get_precedence(op opr) {
     switch (opr) {
     case op::star: return 3;
+    case op::plus: return 3;
     case op::concat: return 2;
     case op::alt: return 1;
     case op::left_par: return 0;
@@ -126,7 +129,7 @@ static const std::vector<token_type> get_possible_token(const char c) {
 }
 
 static bool is_nonop(char ch) {
-    return ch != '\\' && ch != '|' && ch != '*' && ch != '(' && ch != ')';
+    return ch != '\\' && ch != '|' && ch != '*' && ch != '(' && ch != ')' && ch != '+';
 }
 
 static bool is_nonop(token_type ch) {
@@ -138,7 +141,7 @@ static std::vector<token_type> split(const std::string& s) {
     token_type last = nothing{};
     for (const char& ch : s) {
         // add concat operator
-        if (is_char(last) || is_symbol(last) || is(last, op::right_par) || is(last, op::star)) {
+        if (is_char(last) || is_symbol(last) || is(last, op::right_par) || is(last, op::star) || is(last, op::plus)) {
             if (is_nonop(ch) || ch == '(' || ch == '\\') {
                 result.push_back(op::concat);
             }
@@ -157,8 +160,6 @@ static std::vector<token_type> split(const std::string& s) {
                 last = '\0';
             } else if (ch == 'a') {
                 last = '\a';
-            } else if (ch == 'b') {
-                last = '\b';
             } else if (ch == 'v') {
                 last = '\v';
             } else if (ch == 'n') {
@@ -182,6 +183,8 @@ static std::vector<token_type> split(const std::string& s) {
                 last = op::alt;
             } else if (ch == '*') {
                 last = op::star;
+            } else if (ch == '+') {
+                last = op::plus;
             } else if (ch == '(') {
                 last = op::left_par;
             } else if (ch == ')') {
@@ -228,7 +231,7 @@ static std::vector<token_type> to_postfix(const std::vector<token_type>& v) {
                 ops.pop();
             }
             ops.push(ch);
-        } else if (is(ch, op::star)) {
+        } else if (is(ch, op::star) || is(ch, op::plus)) {
             ops.push(ch);
         } else {
             throw regex::unknown_character_exception(std::string{std::get<char>(ch)});
@@ -246,7 +249,6 @@ static std::vector<token_type> to_postfix(const std::vector<token_type>& v) {
 const std::unordered_map<char, std::string> escape_map = {
     {'\0', "\\0"},
     {'\a', "\\a"},
-    {'\b', "\\b"},
     {'\v', "\\v"},
     {'\n', "\\n"},
     {'\t', "\\t"},
