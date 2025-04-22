@@ -41,15 +41,22 @@ public:
     bool match(const std::string& str) const {
         state_t current_state = 1;
         for (const auto& ch : str) {
-            token_t token = ch;
-            if (transitions.find(token) == transitions.end()) {
+            bool find = false;
+            for (const auto& token : regex::get_possible_token(ch)) {
+                if (transitions.find(token) == transitions.end()) {
+                    continue;
+                }
+                auto it = transitions.at(token).find(current_state);
+                if (it == transitions.at(token).end()) {
+                    continue;
+                }
+                current_state = it->second;
+                find = true;
+                break;
+            }
+            if (!find) {
                 return false;
             }
-            auto it = transitions.at(token).find(current_state);
-            if (it == transitions.at(token).end()) {
-                return false;
-            }
-            current_state = it->second;
         }
         return accept_states.count(current_state) > 0;
     }

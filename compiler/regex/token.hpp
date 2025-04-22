@@ -25,7 +25,8 @@ enum class op {
     alt,
     star,
     left_par,
-    right_par
+    right_par,
+    blackslash
 };
 
 const std::unordered_map<symbol, std::string> symbol_map = {
@@ -38,7 +39,8 @@ const std::unordered_map<op, std::string> op_map = {
     {op::alt, "|"},
     {op::star, "*"},
     {op::left_par, "("},
-    {op::right_par, ")"}};
+    {op::right_par, ")"},
+    {op::blackslash, "\\"}};
 
 using token_type = std::variant<symbol, op, char>;
 
@@ -49,6 +51,7 @@ static int get_precedence(op opr) {
     case op::alt: return 1;
     case op::left_par: return 0;
     case op::right_par: return 0;
+    case op::blackslash: return -1;
     }
     return -1;
 }
@@ -84,8 +87,37 @@ static bool is(token_type ch, T other) {
     return false;
 }
 
+static bool match(char c, token_type ch) {
+    if (is_char(ch)) {
+        return std::get<char>(ch) == c;
+    } else if (is_symbol(ch)) {
+        symbol sym = std::get<symbol>(ch);
+        switch (sym) {
+        case symbol::end_mark:
+            return false;
+        case symbol::number:
+            return std::isdigit(c);
+        case symbol::word:
+            return std::isalnum(c) || c == '_';
+        }
+    }
+    return false;
+}
+
+static const std::vector<token_type> get_possible_token(const char c) {
+    std::vector<token_type> result;
+    result.push_back(c);
+    if (std::isalnum(c) || c == '_') {
+        result.push_back(symbol::word);
+    }
+    if (std::isdigit(c)) {
+        result.push_back(symbol::number);
+    }
+    return result;
+}
+
 static bool is_nonop(char ch) {
-    return ch != '|' && ch != '*' && ch != '(' && ch != ')';
+    return ch != '\\' && ch != '|' && ch != '*' && ch != '(' && ch != ')';
 }
 
 static bool is_nonop(token_type ch) {
@@ -103,22 +135,34 @@ static std::vector<token_type> split(const std::string& s) {
             }
         }
 
-        if (is_nonop(ch)) {
-            last = ch;
-        } else if (ch == '|') {
-            last = op::alt;
-        } else if (ch == '*') {
-            last = op::star;
-        } else if (ch == '(') {
-            last = op::left_par;
-        } else if (ch == ')') {
-            last = op::right_par;
+        if (is(last, op::blackslash)) {
+            if (!is_nonop(ch)) {
+                last = ch;
+            } else if (ch == 'w') {
+                last = symbol::word;
+            } else if (ch == 'd') {
+                last = symbol::number;
+            } else {
+                throw regex::unknown_character_exception(std::string{'\\', ch});
+            }
         } else {
-            throw regex::unknown_character_exception(ch);
+            if (is_nonop(ch)) {
+                last = ch;
+            } else if (ch == '\\') {
+                last = op::blackslash;
+                continue;
+            } else if (ch == '|') {
+                last = op::alt;
+            } else if (ch == '*') {
+                last = op::star;
+            } else if (ch == '(') {
+                last = op::left_par;
+            } else if (ch == ')') {
+                last = op::right_par;
+            } else {
+                throw regex::unknown_character_exception(std::string{ch});
+            }
         }
-
-        // TODO: support symbols
-
         result.push_back(last);
     }
 
@@ -160,7 +204,7 @@ static std::vector<token_type> to_postfix(const std::vector<token_type>& v) {
         } else if (is(ch, op::star)) {
             ops.push(ch);
         } else {
-            throw regex::unknown_character_exception(std::get<char>(ch));
+            throw regex::unknown_character_exception(std::string{std::get<char>(ch)});
         }
     }
 

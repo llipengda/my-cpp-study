@@ -1,4 +1,4 @@
-// #define SHOW_DEBUG
+#define SHOW_DEBUG
 #include "regex/dfa.hpp"
 
 int main() {

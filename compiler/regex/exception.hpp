@@ -7,7 +7,7 @@
 namespace regex {
 class unknown_character_exception : public std::exception {
 public:
-    explicit unknown_character_exception(char ch)
+    explicit unknown_character_exception(std::string ch)
         : character(ch), message("Unknown character: ") {
         message += character;
     }
@@ -17,7 +17,7 @@ public:
     }
 
 private:
-    char character;
+    std::string character;
     std::string message;
 };
 
