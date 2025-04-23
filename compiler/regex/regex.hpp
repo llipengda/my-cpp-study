@@ -15,7 +15,7 @@ public:
     }
 
 private:
-    dfa dfa_;
+    dfa::dfa dfa_;
 };
 }; // namespace regex
 

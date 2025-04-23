@@ -9,22 +9,23 @@
 #include <cstddef>
 #include <unordered_set>
 
-namespace regex {
+namespace regex::dfa {
 class dfa {
 public:
     using state_t = std::size_t;
-    using token_t = regex::token_type;
+    using token_t = regex::token::token_type;
+    using token_t_hash = regex::token::token_type_hash;
     using transition_t = std::unordered_map<state_t, state_t>;
-    using dfa_state_t = std::unordered_map<token_t, transition_t>;
+    using dfa_state_t = std::unordered_map<token_t, transition_t, token_t_hash>;
 
     dfa() = delete;
 
-    explicit dfa(const regex::regex_tree& tree) {
+    explicit dfa(const regex::tree::regex_tree& tree) {
         init(tree);
     }
 
     explicit dfa(const std::string& regex) {
-        regex_tree tree(regex);
+        tree::regex_tree tree(regex);
 #ifdef SHOW_DEBUG
         tree.print();
 #endif
@@ -42,7 +43,7 @@ public:
         state_t current_state = 1;
         for (const auto& ch : str) {
             bool find = false;
-            for (const auto& token : regex::get_possible_token(ch)) {
+            for (const auto& token : token::get_possible_token(ch)) {
                 if (transitions.find(token) == transitions.end()) {
                     continue;
                 }
@@ -96,20 +97,20 @@ private:
         std::size_t operator()(const d_state_t& s) const {
             std::size_t h = 0;
             for (auto v : s.states) {
-                h += std::hash<state_t>{}(v);
+                h ^= std::hash<state_t>{}(v);
             }
             return h;
         }
     };
 
-    void init(const regex::regex_tree& tree) {
+    void init(const tree::regex_tree& tree) {
         std::unordered_set<d_state_t, d_state_t_hash> d_states;
         size_t cur = 1;
         d_states.insert({std::unordered_set<state_t>(tree.root->firstpos.begin(), tree.root->firstpos.end()), cur++});
 
         std::unordered_set<d_state_t, d_state_t_hash> unmarked_d_states = d_states;
 
-        std::unordered_set<token_t> all_tokens;
+        std::unordered_set<token_t, token_t_hash> all_tokens;
         for (const auto& token : tree.token_map) {
             all_tokens.insert(token.first);
         }
@@ -122,7 +123,7 @@ private:
             unmarked_d_states.erase(unmarked_d_states.begin());
 
             for (const auto& token : all_tokens) {
-                if (regex::is(token, regex::symbol::end_mark)) {
+                if (token::is(token, token::symbol::end_mark)) {
                     continue;
                 }
 
@@ -146,7 +147,7 @@ private:
                     u.id = it->id;
                 }
 
-                if (u.states.count(*token_map.at(regex::symbol::end_mark).begin())) {
+                if (u.states.count(*token_map.at(token::symbol::end_mark).begin())) {
                     accept_states.insert(u.id);
                 }
 

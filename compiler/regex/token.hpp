@@ -10,10 +10,11 @@
 #include <stack>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <variant>
 #include <vector>
 
-namespace regex {
+namespace regex::token {
 enum class symbol {
     end_mark,
     number,
@@ -48,7 +49,57 @@ const std::unordered_map<op, std::string> op_map = {
 
 enum class nothing {};
 
-using token_type = std::variant<nothing, symbol, op, char>;
+struct char_set {
+    std::unordered_set<char> chars;
+    bool is_negative = false;
+
+    char_set() = default;
+    explicit char_set(char from, char to, bool is_negative = false) : is_negative(is_negative) {
+        for (char ch = from; ch <= to; ++ch) {
+            chars.insert(ch);
+        }
+    }
+
+    void add(char ch) {
+        chars.insert(ch);
+    }
+
+    void add(const char_set& other) {
+        chars.insert(other.chars.begin(), other.chars.end());
+    }
+
+    void add(char from, char to) {
+        for (char ch = from; ch <= to; ++ch) {
+            chars.insert(ch);
+        }
+    }
+
+    bool operator==(const char_set& other) const {
+        return chars == other.chars && is_negative == other.is_negative;
+    }
+};
+
+using token_type = std::variant<nothing, symbol, op, char_set, char>;
+
+struct token_type_hash {
+    std::size_t operator()(const token_type& t) const {
+        if (std::holds_alternative<char>(t)) {
+            return std::hash<char>{}(std::get<char>(t));
+        } else if (std::holds_alternative<symbol>(t)) {
+            return std::hash<int>{}(static_cast<int>(std::get<symbol>(t)));
+        } else if (std::holds_alternative<op>(t)) {
+            return std::hash<int>{}(static_cast<int>(std::get<op>(t)));
+        } else if (std::holds_alternative<char_set>(t)) {
+            std::size_t hash = 0;
+            const auto& set = std::get<char_set>(t);
+            for (const auto& ch : set.chars) {
+                hash ^= std::hash<char>{}(ch);
+            }
+            return hash;
+        }
+        return 0;
+    }
+};
 
 static int get_precedence(op opr) {
     switch (opr) {
