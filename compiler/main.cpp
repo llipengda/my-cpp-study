@@ -1,10 +1,18 @@
-#define SHOW_DEBUG
-#include "regex/regex.hpp"
+// #define SHOW_DEBUG
+#include "lexer/lexer.hpp"
 
 int main() {
-    std::string regex = R"(ab|\wd)";
-    std::string str = "ad";
+    auto lex = lexer::lexer();
+    std::string input;
 
-    regex::regex r(regex);
-    std::cout << "Match: " << (r.match(str) ? "true" : "false") << std::endl;
+    std::string tmp;
+    while (std::getline(std::cin, tmp)) {
+        input += tmp + '\n';
+    }
+
+    auto res = lex.parse(input);
+
+    for (int i = 0; i < res.size(); ++i) {
+        std::cout << i + 1 << ": <" << res[i].first << ',' << res[i].second << ">\n";
+    }
 }

@@ -15,8 +15,8 @@ public:
     using state_t = std::size_t;
     using token_t = regex::token::token_type;
     using token_t_hash = regex::token::token_type_hash;
-    using transition_t = std::unordered_map<state_t, state_t>;
-    using dfa_state_t = std::unordered_map<token_t, transition_t, token_t_hash>;
+    using transition_t = std::unordered_map<token_t, state_t, token_t_hash>;
+    using dfa_state_t = std::unordered_map<state_t, transition_t>;
 
     dfa() = delete;
 
@@ -36,24 +36,26 @@ public:
     }
 
     void add_transition(state_t from, const token_t& token, state_t to) {
-        transitions[token][from] = to;
+        transitions[from][token] = to;
     }
 
     bool match(const std::string& str) const {
         state_t current_state = 1;
         for (const auto& ch : str) {
             bool find = false;
-            for (const auto& token : token::get_possible_token(ch)) {
-                if (transitions.find(token) == transitions.end()) {
-                    continue;
+            if (!transitions.count(current_state)) {
+                return false;
+            }
+            if (transitions.at(current_state).count(ch)) {
+                current_state = transitions.at(current_state).at(ch);
+                continue;
+            }
+            for (const auto& [token, to] : transitions.at(current_state)) {
+                if (token::match(ch, token)) {
+                    current_state = to;
+                    find = true;
+                    break;
                 }
-                auto it = transitions.at(token).find(current_state);
-                if (it == transitions.at(token).end()) {
-                    continue;
-                }
-                current_state = it->second;
-                find = true;
-                break;
             }
             if (!find) {
                 return false;
@@ -62,14 +64,51 @@ public:
         return accept_states.count(current_state) > 0;
     }
 
+    std::size_t match_max(const std::string& str) const {
+        state_t current_state = 1;
+        std::size_t last_accept_pos = 0;
+
+        for (size_t i = 0; i < str.size(); ++i) {
+            char ch = str[i];
+            bool find = false;
+
+            if (!transitions.count(current_state)) {
+                break;
+            }
+
+            if (transitions.at(current_state).count(ch)) {
+                current_state = transitions.at(current_state).at(ch);
+                find = true;
+            } else {
+                for (const auto& [token, to] : transitions.at(current_state)) {
+                    if (token::match(ch, token)) {
+                        current_state = to;
+                        find = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!find) {
+                break;
+            }
+
+            if (accept_states.count(current_state)) {
+                last_accept_pos = i + 1;
+            }
+        }
+
+        return last_accept_pos;
+    }
+
     const dfa_state_t& get_transitions() const {
         return transitions;
     }
 
     void print() const {
         std::cout << "DFA" << std::endl;
-        for (const auto& [token, trans] : transitions) {
-            for (const auto& [from, to] : trans) {
+        for (const auto& [from, trans] : transitions) {
+            for (const auto& [token, to] : trans) {
                 std::cout << "  Transition: " << from << " -- " << token << " --> " << to << std::endl;
             }
         }
@@ -156,6 +195,6 @@ private:
         }
     }
 };
-} // namespace regex
+} // namespace regex::dfa
 
 #endif // REGEX_DFA_HPP

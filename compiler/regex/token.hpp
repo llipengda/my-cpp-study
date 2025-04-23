@@ -5,21 +5,21 @@
 
 #include "exception.hpp"
 
+#include <initializer_list>
 #include <iostream>
 #include <ostream>
+#include <set>
 #include <stack>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
+#include <utility>
 #include <variant>
 #include <vector>
 
 namespace regex::token {
 enum class symbol {
-    end_mark,
-    number,
-    word,
-    white_space,
+    end_mark
 };
 
 enum class op {
@@ -33,10 +33,7 @@ enum class op {
 };
 
 const std::unordered_map<symbol, std::string> symbol_map = {
-    {symbol::end_mark, "#"},
-    {symbol::number, "\\d"},
-    {symbol::word, "\\w"},
-    {symbol::white_space, "\\s"}};
+    {symbol::end_mark, "#"}};
 
 const std::unordered_map<op, std::string> op_map = {
     {op::concat, "·"},
@@ -60,6 +57,18 @@ struct char_set {
         }
     }
 
+    explicit char_set(std::initializer_list<char> init, bool is_negative = false) : is_negative(is_negative) {
+        for (const auto& ch : init) {
+            chars.insert(ch);
+        }
+    }
+
+    explicit char_set(std::initializer_list<std::pair<char, char>> init, bool is_negative = false) : is_negative(is_negative) {
+        for (const auto& [from, to] : init) {
+            add(from, to);
+        }
+    }
+
     void add(char ch) {
         chars.insert(ch);
     }
@@ -78,6 +87,10 @@ struct char_set {
         return chars == other.chars && is_negative == other.is_negative;
     }
 };
+
+static const char_set words{{'a', 'z'}, {'A', 'Z'}, {'0', '9'}, {'_', '_'}};
+static const char_set digits('0', '9');
+static const char_set whitespaces{' ', '\t', '\n', '\r', '\f', '\v'};
 
 using token_type = std::variant<nothing, symbol, op, char_set, char>;
 
@@ -137,6 +150,10 @@ static bool is_op(token_type ch) {
     return std::holds_alternative<op>(ch);
 }
 
+static bool is_char_set(token_type ch) {
+    return std::holds_alternative<char_set>(ch);
+}
+
 template <typename T>
 static bool is(token_type ch, T other) {
     if (auto* p = std::get_if<T>(&ch)) {
@@ -148,65 +165,71 @@ static bool is(token_type ch, T other) {
 static bool match(char c, token_type ch) {
     if (is_char(ch)) {
         return std::get<char>(ch) == c;
-    } else if (is_symbol(ch)) {
-        symbol sym = std::get<symbol>(ch);
-        switch (sym) {
-        case symbol::end_mark:
-            return false;
-        case symbol::number:
-            return std::isdigit(c);
-        case symbol::word:
-            return std::isalnum(c) || c == '_';
-        case symbol::white_space:
-            return std::isspace(c);
+    } else if (is_char_set(ch)) {
+        const auto& set = std::get<char_set>(ch);
+        if (set.is_negative) {
+            return set.chars.find(c) == set.chars.end();
+        } else {
+            return set.chars.find(c) != set.chars.end();
         }
     }
     return false;
 }
 
-static const std::vector<token_type> get_possible_token(const char c) {
-    std::vector<token_type> result;
-    if (std::isalnum(c) || c == '_') {
-        result.push_back(symbol::word);
-    }
-    if (std::isdigit(c)) {
-        result.push_back(symbol::number);
-    }
-    if (std::isspace(c)) {
-        result.push_back(symbol::white_space);
-    }
-    result.push_back(c);
-    return result;
-}
-
 static bool is_nonop(char ch) {
-    return ch != '\\' && ch != '|' && ch != '*' && ch != '(' && ch != ')' && ch != '+';
+    return ch != '\\' && ch != '|' && ch != '*' && ch != '(' && ch != ')' && ch != '+' && ch != '[' && ch != ']';
 }
 
 static bool is_nonop(token_type ch) {
-    return is_char(ch) || is_symbol(ch);
+    return is_char(ch) || is_symbol(ch) || is_char_set(ch);
 }
 
 static std::vector<token_type> split(const std::string& s) {
     std::vector<token_type> result{op::left_par};
     token_type last = nothing{};
+    bool in_char_set = false;
+    bool in_range = false;
+    char last_char_in_set = '\0';
+    char_set current_set;
     for (const char& ch : s) {
         // add concat operator
-        if (is_char(last) || is_symbol(last) || is(last, op::right_par) || is(last, op::star) || is(last, op::plus)) {
-            if (is_nonop(ch) || ch == '(' || ch == '\\') {
+        if (is_char(last) || is_symbol(last) || is_char_set(last) || is(last, op::right_par) || is(last, op::star) || is(last, op::plus)) {
+            if (!in_char_set && (is_nonop(ch) || ch == '(' || ch == '\\' || ch == '[')) {
                 result.push_back(op::concat);
             }
+        }
+
+        if (in_char_set) {
+            if (ch == ']') {
+                in_char_set = false;
+                last = current_set;
+                result.push_back(current_set);
+                current_set = char_set{};
+            } else if (ch == '-') {
+                in_range = true;
+            } else if (in_range) {
+                in_range = false;
+                current_set.add(last_char_in_set, ch);
+            } else if (ch == '^') {
+                current_set.is_negative = true;
+            } else {
+                current_set.add(ch);
+            }
+            if (!in_range) {
+                last_char_in_set = ch;
+            }
+            continue;
         }
 
         if (is(last, op::blackslash)) {
             if (!is_nonop(ch)) {
                 last = ch;
             } else if (ch == 'w') {
-                last = symbol::word;
+                last = words;
             } else if (ch == 'd') {
-                last = symbol::number;
+                last = digits;
             } else if (ch == 's') {
-                last = symbol::white_space;
+                last = whitespaces;
             } else if (ch == '0') {
                 last = '\0';
             } else if (ch == 'a') {
@@ -240,11 +263,21 @@ static std::vector<token_type> split(const std::string& s) {
                 last = op::left_par;
             } else if (ch == ')') {
                 last = op::right_par;
+            } else if (ch == '[') {
+                in_char_set = true;
+                continue;
             } else {
                 throw regex::unknown_character_exception(std::string{ch});
             }
         }
         result.push_back(last);
+    }
+
+    if (in_char_set) {
+        throw regex::invalid_regex_exception("Unmatched '[' in regex");
+    }
+    if (in_range) {
+        throw regex::invalid_regex_exception("Unmatched '-' in regex");
     }
 
     if (!result.empty()) {
@@ -261,7 +294,7 @@ static std::vector<token_type> to_postfix(const std::vector<token_type>& v) {
     std::stack<token_type> ops;
 
     for (const auto& ch : v) {
-        if (is_char(ch) || is_symbol(ch)) {
+        if (is_char(ch) || is_symbol(ch) || is_char_set(ch)) {
             res.push_back(ch);
         } else if (is(ch, op::left_par)) {
             ops.push(ch);
@@ -298,7 +331,7 @@ static std::vector<token_type> to_postfix(const std::vector<token_type>& v) {
     return res;
 }
 
-const std::unordered_map<char, std::string> escape_map = {
+static const std::unordered_map<char, std::string> escape_map = {
     {'\0', "\\0"},
     {'\a', "\\a"},
     {'\v', "\\v"},
@@ -321,6 +354,69 @@ inline std::ostream& operator<<(std::ostream& os, const token_type& ch) {
         os << op_map.at(std::get<op>(ch));
     } else if (is_symbol(ch)) {
         os << symbol_map.at(std::get<symbol>(ch));
+    } else if (is_char_set(ch)) {
+        const auto& set = std::get<char_set>(ch);
+        std::set<char> new_chars;
+        bool is_negative = set.is_negative;
+
+        if (set.chars.size() > 128 / 2) {
+            is_negative = !is_negative;
+            for (int i = 0; i < 128; ++i) {
+                char c = static_cast<char>(i);
+                if (set.chars.find(c) == set.chars.end()) {
+                    new_chars.insert(c);
+                }
+            }
+        } else {
+            new_chars.insert(set.chars.begin(), set.chars.end());
+        }
+
+        if (is_negative) {
+            os << "[^";
+        } else {
+            os << '[';
+        }
+
+        if (new_chars.empty()) {
+            os << ']';
+            return os;
+        }
+
+        // for (auto it = new_chars.begin(); it != new_chars.end(); ++it) {
+        //     os << *it;
+        // }
+
+        auto it = new_chars.begin();
+        char start = *it;
+        char prev = *it;
+
+        ++it;
+        for (; it != new_chars.end(); ++it) {
+            if (*it == prev + 1) {
+                prev = *it;
+            } else {
+                if (start == prev) {
+                    os << start;
+                } else if (prev == start + 1) {
+                    os << start << prev;
+                } else {
+                    os << start << '-' << prev;
+                }
+                start = prev = *it;
+            }
+        }
+
+        if (start == prev) {
+            os << start;
+        } else if (prev == start + 1) {
+            os << start << prev;
+        } else {
+            os << start << '-' << prev;
+        }
+
+        os << ']';
+    } else {
+        throw std::invalid_argument("Invalid token type for output stream");
     }
     return os;
 }
@@ -331,6 +427,16 @@ static void print(const std::vector<token_type>& v) {
     }
     std::cout << std::endl;
 }
-} // namespace regex
+
+static char_set to_char_set(const token_type& token) {
+    if (std::holds_alternative<char>(token)) {
+        return char_set{std::get<char>(token)};
+    } else if (std::holds_alternative<char_set>(token)) {
+        return std::get<char_set>(token);
+    } else {
+        throw std::invalid_argument("Invalid token type for conversion to char_set");
+    }
+}
+} // namespace regex::token
 
 #endif // REGEX_TOKEN_HPP

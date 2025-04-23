@@ -112,7 +112,9 @@ class regex_tree {
 public:
     regex_node::node_ptr_t root;
 
-    std::unordered_map<token::token_type, std::unordered_set<std::size_t>, token::token_type_hash> token_map;
+    using token_map_t = std::unordered_map<token::token_type, std::unordered_set<std::size_t>, token::token_type_hash>;
+
+    token_map_t token_map;
 
     std::unordered_map<std::size_t, std::unordered_set<std::size_t>> followpos;
 
@@ -121,11 +123,11 @@ public:
     explicit regex_tree(const std::string& s) {
         auto ss = token::split(s);
 #ifdef SHOW_DEBUG
-        ::regex::print(ss);
+        ::regex::token::print(ss);
 #endif
         auto postfix = to_postfix(ss);
 #ifdef SHOW_DEBUG
-        ::regex::print(postfix);
+        ::regex::token::print(postfix);
 #endif
 
         std::stack<regex_node::node_ptr_t> st;
@@ -201,16 +203,7 @@ public:
             }
         });
 
-        // for (auto& [k, v] : token_map) {
-        //     for (auto& [kk, vv] : token_map) {
-        //         if (regex::is_char(k) && regex::is_symbol(kk)) {
-        //             auto ch = std::get<char>(k);
-        //             if (regex::match(ch, kk)) {
-        //                 v.insert(vv.begin(), vv.end());
-        //             }
-        //         }
-        //     }
-        // }
+        token_map = disjoint_token_sets(token_map);
     }
 
     void visit(std::function<void(regex_node&)> func) {
@@ -272,6 +265,61 @@ private:
             std::cout << token::op_map.at(op::plus) << std::endl;
             print(node->as<tree::plus_node>().child, indent + 2);
         }
+    }
+
+    struct unordered_set_hash {
+        std::size_t operator()(const std::unordered_set<std::size_t>& s) const {
+            std::size_t h = 0;
+            for (auto v : s) {
+                h ^= std::hash<std::size_t>{}(v);
+            }
+            return h;
+        }
+    };
+
+    token_map_t disjoint_token_sets(const token_map_t& original) {
+        std::unordered_map<char, std::unordered_set<size_t>> char_to_positions;
+
+        for (const auto& [token, positions] : original) {
+            if (is(token, token::symbol::end_mark)) {
+                continue;
+            }
+            auto cs = to_char_set(token);
+            if (!cs.is_negative) {
+                for (char ch : cs.chars) {
+                    char_to_positions[ch].insert(positions.begin(), positions.end());
+                }
+            } else {
+                for (int c = -128; c < 128; ++c) {
+                    if (!cs.chars.count(static_cast<char>(c))) {
+                        char_to_positions[c].insert(positions.begin(), positions.end());
+                    }
+                }
+            }
+        }
+
+        std::unordered_map<std::unordered_set<size_t>, std::unordered_set<char>, unordered_set_hash> grouped;
+        for (const auto& [ch, pos] : char_to_positions) {
+            grouped[pos].insert(ch);
+        }
+
+        token_map_t result;
+
+        for (const auto& [positions, chars] : grouped) {
+            if (chars.size() == 1) {
+                result[token::token_type{*chars.begin()}] = positions;
+                continue;
+            }
+            token::char_set cs;
+            for (char ch : chars) {
+                cs.add(ch);
+            }
+            result[token::token_type{cs}] = positions;
+        }
+
+        result[token::token_type{token::symbol::end_mark}] = original.at(token::symbol::end_mark);
+
+        return result;
     }
 };
 

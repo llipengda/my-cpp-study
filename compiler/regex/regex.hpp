@@ -14,6 +14,10 @@ public:
         return dfa_.match(str);
     }
 
+    std::size_t match_max(const std::string& str) const {
+        return dfa_.match_max(str);
+    }
+
 private:
     dfa::dfa dfa_;
 };
