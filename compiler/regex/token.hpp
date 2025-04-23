@@ -115,7 +115,6 @@ static bool match(char c, token_type ch) {
 
 static const std::vector<token_type> get_possible_token(const char c) {
     std::vector<token_type> result;
-    result.push_back(c);
     if (std::isalnum(c) || c == '_') {
         result.push_back(symbol::word);
     }
@@ -125,6 +124,7 @@ static const std::vector<token_type> get_possible_token(const char c) {
     if (std::isspace(c)) {
         result.push_back(symbol::white_space);
     }
+    result.push_back(c);
     return result;
 }
 
@@ -137,7 +137,7 @@ static bool is_nonop(token_type ch) {
 }
 
 static std::vector<token_type> split(const std::string& s) {
-    std::vector<token_type> result;
+    std::vector<token_type> result{op::left_par};
     token_type last = nothing{};
     for (const char& ch : s) {
         // add concat operator
@@ -197,6 +197,7 @@ static std::vector<token_type> split(const std::string& s) {
     }
 
     if (!result.empty()) {
+        result.push_back(op::right_par);
         result.push_back(op::concat);
         result.push_back(symbol::end_mark);
     }

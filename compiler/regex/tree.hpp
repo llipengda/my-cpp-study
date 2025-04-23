@@ -198,6 +198,17 @@ public:
                 }
             }
         });
+
+        // for (auto& [k, v] : token_map) {
+        //     for (auto& [kk, vv] : token_map) {
+        //         if (regex::is_char(k) && regex::is_symbol(kk)) {
+        //             auto ch = std::get<char>(k);
+        //             if (regex::match(ch, kk)) {
+        //                 v.insert(vv.begin(), vv.end());
+        //             }
+        //         }
+        //     }
+        // }
     }
 
     void visit(std::function<void(regex_node&)> func) {

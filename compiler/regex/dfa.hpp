@@ -103,7 +103,6 @@ private:
     };
 
     void init(const regex::regex_tree& tree) {
-        // TODO：using std::unordered_set
         std::unordered_set<d_state_t, d_state_t_hash> d_states;
         size_t cur = 1;
         d_states.insert({std::unordered_set<state_t>(tree.root->firstpos.begin(), tree.root->firstpos.end()), cur++});
@@ -132,6 +131,10 @@ private:
                     if (d_state.states.count(i)) {
                         u.states.insert(followpos.at(i).begin(), followpos.at(i).end());
                     }
+                }
+
+                if (u.states.empty()) {
+                    continue;
                 }
 
                 auto it = d_states.find(u);
