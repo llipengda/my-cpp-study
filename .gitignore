@@ -9,3 +9,4 @@ in/
 out.out
 *.exe
 gcm.cache/
+.idea/
